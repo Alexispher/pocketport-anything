@@ -21,3 +21,74 @@ Activate for game-to-Nintendo-3DS porting, adapting an existing game engine, ARM
 10. Produce manifests, command logs, checksums and evidence levels L0-L7. Never claim a 3DS build or hardware success from GCC-only tests.
 
 Reusable examples: `examples/source-port`, `examples/translation-demo`, `templates/3ds-homebrew`, `examples/asset-pipeline`. The coordinator integrates changes and verifies claims.
+
+
+## Current reusable dual-screen workflow
+
+Before choosing a porting strategy, read docs/DUAL_SCREEN.md and docs/AGENT_DEBUGGING.md.
+The hardware top viewport is 400x240 per eye; the bottom touch viewport is 320x240.
+Inspect the actual source game's viewports and control dependencies. Choose a versioned
+layout in examples/source-port/display-profile.json and run:
+
+    python -m pocketport screen-assess examples/source-port/display-profile.json
+    python -m pocketport screen-header examples/source-port/display-profile.json --out /tmp/pp_profile.h
+
+If evidence is unknown, retain unknown status, including application RAM. The native
+Star Catcher demonstration shares the portable PPGame core between host and 3DS,
+with upper gameplay, lower Citro2D HUD/MAP/BAG/PAUSE/HELP, touch and physical alternatives.
+New ports should reuse runtime/ui/pp_ui and runtime/platform/pp_display_3ds rather
+than grafting extra game-specific code into the native viewer.
+
+In each failure class (graphics, shader, depth, touch, UI state, audio, save, memory,
+input, conversion), inspect -> reproduce -> isolate -> write regression -> repair ->
+cross-compile -> emulator screenshot -> hardware validation. Never collapse statuses:
+HOST_TESTED is not CROSS_COMPILED; CROSS_COMPILED is not INTERACTIVE.
+Native Star Catcher requires real libctru, Citro3D and Citro2D. The Skyrim viewer
+is separate and must remain working. Keep GPU resource ownership and cleanup bounded.
+
+This root skill is the SINGLE authoritative instruction body; other Agent Skills
+discovery entries only point here. Read the focused documentation as necessary,
+not all internals at once.
+
+
+## Real C/C++ game import and adaptation (implemented)
+
+Read docs/SOURCE_PORTING.md. For a real game, first confirm the source revision,
+upstream license, build system, protected assets and gameplay entrypoint.
+Use the bounded scanner and preserve the original:
+
+    python -m pocketport inspect-source /path/to/authorized/game --out /tmp/inspection.json
+    python -m pocketport port /path/to/authorized/game --target new3ds --out /tmp/game-3ds
+    python -m pocketport verify-port /tmp/game-3ds
+
+Do not run imported build scripts by default. For a source tree whose full
+Makefile has been inspected, reviewed and explicitly trusted, a native
+3DS build is opt-in using port-build --execute-trusted-build. Review
+port.json, native-build.log, compiler_diagnostics and the 3DSX SHA-256.
+Only redistribute after verifying source/media rights and opting into
+port-package --redistribution-authorized (bundle corresponding source).
+
+Existing verified game adapters are narrowly scoped and not general
+binary conversion: edgar-sdl2 adjusts SDL2 rendering selection under
+__3DS__; abbaye-native-3ds repairs one historical audio API call in
+a GPLv3 already-native game port. Both preserve original game logic.
+Their tests and pinned external-source CI are evidence of behavior, not
+proof of newly playable games.
+
+Engineering loop: original-game baseline -> inspect symbol/file issues
+-> reviewed patch -> verify SHA -> native compiler logs -> fix exactly
+observed failures -> check real game stages -> emulator -> hardware.
+Do not declare status PLAYABLE without actual same-build progression.
+
+## Imported game engineering
+
+Use the existing read-only source-audit, inspect-source and port-assess
+commands before editing a real project; request a required-action inventory
+for control-coverage and retain unknowns. Read docs/PORTING_ASSESSMENT.md.
+Use port (isolated and SHA-256 gated), review.patch, verify-port, then
+port-build with an *explicitly trusted* build script, and diagnose-build.
+Do not silently disable required game systems. For genuine game acceptance,
+validate the original title, interactions, level transitions, resource
+ownership, save/load and audio on the SAME native binary. A compilation
+is not gameplay or emulator evidence. GPL game assets/code cannot be
+relicensed as MIT by importing them.
