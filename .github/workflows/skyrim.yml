@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - feature/skyrim-native-runtime
+      - feature/antigravity-skyrim-rendering
   pull_request:
 jobs:
   skyrim-host:
@@ -28,7 +29,112 @@ jobs:
         shell: bash
         run: |
           if command -v arm-none-eabi-gcc && command -v 3dsxtool && command -v picasso; then
-            make -C examples/skyrim-native
+            export PATH="$DEVKITARM/bin:$DEVKITPRO/tools/bin:$PATH"
+          make -C examples/skyrim-native
           else
             echo "devkitARM/3dsxtool/picasso absent: .3dsx NOT cross-compiled in this runner"
           fi
+
+  skyrim-3dsx:
+    name: Native New 3DS cross-compile (no emulator claim)
+    runs-on: ubuntu-latest
+    container:
+      image: devkitpro/devkitarm:20260610
+    env:
+      DEVKITPRO: /opt/devkitpro
+      DEVKITARM: /opt/devkitpro/devkitARM
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify devkitPro toolchain
+        shell: bash
+        run: |
+          set -euxo pipefail
+          export PATH="$DEVKITARM/bin:$DEVKITPRO/tools/bin:$PATH"
+          command -v arm-none-eabi-gcc
+          command -v picasso
+          command -v 3dsxtool
+          test -d "${DEVKITARM:-/opt/devkitpro/devkitARM}"
+          test -f "${DEVKITPRO:-/opt/devkitpro}/libctru/include/3ds.h"
+          arm-none-eabi-gcc --version | head -1
+      - name: Cross-compile native Citro3D viewer
+        shell: bash
+        run: |
+          set -euxo pipefail
+          make -C examples/skyrim-native
+          test -s examples/skyrim-native/pocketport-skyrim.3dsx
+          sha256sum examples/skyrim-native/pocketport-skyrim.3dsx
+      - name: Real PICA200 texture encoder smoke test
+        shell: bash
+        run: |
+          set -euxo pipefail
+          export PATH="$DEVKITARM/bin:$DEVKITPRO/tools/bin:$PATH"
+          command -v tex3ds
+          python3 - <<'PY'
+          import struct, zlib
+          def chunk(kind,data):
+              return (struct.pack(">I",len(data))+kind+data+
+                      struct.pack(">I",zlib.crc32(kind+data)&0xffffffff))
+          raw=b"".join(b"\x00"+bytes((220,80,40,255))*16 for _ in range(16))
+          png=(b"\x89PNG\r\n\x1a\n"+
+               chunk(b"IHDR",struct.pack(">IIBBBBB",16,16,8,6,0,0,0))+
+               chunk(b"IDAT",zlib.compress(raw))+chunk(b"IEND",b""))
+          open("/tmp/pocketport-test.png","wb").write(png)
+          PY
+          tex3ds -f rgba8 -o /tmp/pocketport-test.t3x /tmp/pocketport-test.png
+          test -s /tmp/pocketport-test.t3x
+          sha256sum /tmp/pocketport-test.t3x
+      - name: Generate original SD scene and validate formats
+        shell: bash
+        run: |
+          set -euxo pipefail
+          export PATH="$DEVKITARM/bin:$DEVKITPRO/tools/bin:$PATH"
+          PYTHONPATH=. python3 -m pocketport.skyrim.fixture --output /tmp/pocketport-release
+          test -s /tmp/pocketport-release/3ds/pocketport/skyrim/scene.ppsc
+          test -s /tmp/pocketport-release/3ds/pocketport/skyrim/mesh.ppmg
+          PYTHONPATH=. python3 - <<'PY'
+          from pathlib import Path
+          from pocketport.skyrim.scene import read_scene
+          from pocketport.skyrim.nif import decode_mesh
+          d=Path("/tmp/pocketport-release/3ds/pocketport/skyrim")
+          assert read_scene((d/"scene.ppsc").read_bytes())["count"] == 3
+          assert len(decode_mesh((d/"mesh.ppmg").read_bytes()).triangles) > 12
+          PY
+      - name: Package authentic .3dsx and ready-to-copy SD scene
+        shell: bash
+        run: |
+          set -euxo pipefail
+          mkdir -p /tmp/pocketport-release
+          cp examples/skyrim-native/pocketport-skyrim.3dsx /tmp/pocketport-release/
+          cat > /tmp/pocketport-release/README.txt <<'EOF'
+          PocketPort Skyrim - Original 3D test scene
+          ==========================================
+          1. Launch pocketport-skyrim.3dsx with Azahar 2126.2.
+          2. The EXE contains a compiled original 3D scene and does not need Skyrim files.
+          3. Optional: copy the supplied 3ds/ folder to the root of Azahar's emulated
+             SD card (sdmc), preserving 3ds/pocketport/skyrim/scene.ppsc and mesh.ppmg.
+          4. Use Circle Pad or D-pad to pan, START to exit.
+          5. Real licensed Skyrim LE/SE files are NOT shipped in this package.
+          Passing CI proves cross-compilation, not actual Azahar framebuffer rendering.
+          EOF
+          python3 - <<'PY'
+          from pathlib import Path
+          import zipfile
+          src=Path("/tmp/pocketport-release")
+          with zipfile.ZipFile("pocketport-skyrim-azahar-test.zip","w",zipfile.ZIP_DEFLATED) as archive:
+              for p in sorted(src.rglob("*")):
+                  if p.is_file():
+                      archive.write(p,p.relative_to(src).as_posix())
+          PY
+          test -s pocketport-skyrim-azahar-test.zip
+      - name: Upload complete Azahar test kit
+        uses: actions/upload-artifact@v4
+        with:
+          name: pocketport-skyrim-azahar-test-kit
+          path: pocketport-skyrim-azahar-test.zip
+          if-no-files-found: error
+      - name: Upload authentic native binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: pocketport-skyrim-native-3dsx
+          path: examples/skyrim-native/pocketport-skyrim.3dsx
+          if-no-files-found: error

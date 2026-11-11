@@ -19,6 +19,10 @@ from .skyrim.bsa import inspect_bsa, BSAError
 from .skyrim.tes5 import inspect_plugin, TES5Error
 from .skyrim.dds import convert_dds, DDSError
 from .skyrim.scene import convert_plugin, read_scene, SceneError
+from .skyrim.nif import convert_nif, decode_mesh, NIFError
+from .skyrim.converter import convert_game, ConversionError
+from .skyrim.fixture import generate as generate_fixture
+from .skyrim.texture_gpu import convert_t3x, DDSError as GPUDDSError
 from .planning import choose
 from .translation import parse, verify_host, write_c
 
@@ -63,6 +67,26 @@ def run(args: argparse.Namespace) -> dict:
     if args.cmd == "skyrim-convert-scene":
         return convert_plugin(Path(args.file), Path(args.out),
                               cell_id=(int(args.cell_id, 0) if args.cell_id else None))
+    if args.cmd == "skyrim":
+        if args.skyrim_cmd == "test-scene":
+            return generate_fixture(Path(args.output))
+        if args.skyrim_cmd == "convert":
+            return convert_game(Path(args.game_dir), Path(args.output),
+                                cell_id=int(args.cell, 0),
+                                max_instances=args.max_instances,
+                                triangle_limit=args.triangle_limit)
+        raise ValueError("Unknown Skyrim subcommand")
+    if args.cmd == "skyrim-convert-texture":
+        return convert_t3x(Path(args.file), Path(args.out), max_dimension=args.max_dimension)
+    if args.cmd == "skyrim-convert-nif":
+        return convert_nif(Path(args.file), Path(args.out))
+    if args.cmd == "skyrim-validate-mesh":
+        p = Path(args.file)
+        if p.is_symlink() or not p.is_file() or p.stat().st_size > 300000:
+            raise NIFError("Invalid or oversized PPMG mesh")
+        mesh = decode_mesh(p.read_bytes())
+        return {"status":"valid","vertices":len(mesh.vertices),
+                "triangles":len(mesh.triangles)}
     if args.cmd == "skyrim-validate-scene":
         path = Path(args.file)
         if path.is_symlink() or path.stat().st_size > 50000:
@@ -173,6 +197,26 @@ def parser() -> argparse.ArgumentParser:
     sk_scene.add_argument("file")
     sk_scene.add_argument("--out", required=True)
     sk_scene.add_argument("--cell-id", help="Cell FormID decimal or 0x hexadecimal")
+    skyrim = commands.add_parser("skyrim", help="Skyrim LE/SE local conversion pipeline")
+    sk_cmd = skyrim.add_subparsers(dest="skyrim_cmd", required=True)
+    sk_fixture = sk_cmd.add_parser("test-scene", help="Original reproducible 3D test scene and SD-card folder")
+    sk_fixture.add_argument("--output",required=True)
+    sk_convert = sk_cmd.add_parser("convert", help="Convert one authentic cell and static NIF from local Skyrim files")
+    sk_convert.add_argument("--game-dir", required=True)
+    sk_convert.add_argument("--cell", required=True, help="TES5 cell FormID (decimal or 0xhex)")
+    sk_convert.add_argument("--target", choices=("new3ds",), default="new3ds")
+    sk_convert.add_argument("--output", required=True)
+    sk_convert.add_argument("--max-instances", type=int, default=128)
+    sk_convert.add_argument("--triangle-limit", type=int, default=1024)
+    sk_tex = commands.add_parser("skyrim-convert-texture", help="Convert BC1/BC3 DDS to PICA200 tex3ds .t3x")
+    sk_tex.add_argument("file")
+    sk_tex.add_argument("--out", required=True)
+    sk_tex.add_argument("--max-dimension",type=int,choices=(32,64,128,256),default=128)
+    sk_nif = commands.add_parser("skyrim-convert-nif", help="Convert limited static BSTriShape NIF to PPMG")
+    sk_nif.add_argument("file")
+    sk_nif.add_argument("--out", required=True)
+    sk_mesh = commands.add_parser("skyrim-validate-mesh", help="Validate a PPMG v1 geometry package")
+    sk_mesh.add_argument("file")
     sk_verify = commands.add_parser("skyrim-validate-scene", help="Validate PPSC scene package without execution")
     sk_verify.add_argument("file")
     hashcmd = commands.add_parser("hash", help="SHA-256 hash an existing file")

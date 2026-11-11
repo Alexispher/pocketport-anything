@@ -85,3 +85,116 @@ Skyrim data. A launch in Azahar/3DS has **not** yet been observed.
 Only test execution justifies HOST_TESTED. Native 3DS launch,
 actual Skyrim game data loading, NIF mesh rendering and hardware
 validation require separate future evidence; none is claimed here.
+
+
+## Special Edition archive support (limited)
+
+A BSA archive whose actual header declares version **105** is parsed with
+24-byte folder descriptors and LZ4 compressed members; v104 continues to
+use 16-byte folder descriptors and zlib. The file magic/version are verified
+from bytes, **not** inferred from folder names. This is BSA only: Fallout 4
+BA2/BTDX packages are distinct and explicitly unsupported by this reader.
+The optional host converter dependency is `lz4`; compressed extraction
+has a caller-supplied output budget.
+
+Skyrim LE and SE share many TES5 plugin records, but **mesh dialects
+and BS stream versions vary**. Until a corresponding NIF reader and
+verified scene fixture are available, a successfully read BSA is not
+evidence that an SE world renders.
+
+
+## Static BSTriShape NIF geometry (new experiment)
+
+`python -m pocketport skyrim-convert-nif /private/meshes/fixture.nif --out /private/output/mesh.ppmg`
+converts one strictly bounded NIF 20.2.0.7 BSTriShape, Bethesda stream 100 or
+130, to PPMG v1 vertex/index geometry (XYZ, normals, UV). The reader enforces
+finite transforms, index bounds and a single shape. Skinning, compound
+shapes, materials, dynamic shapes and full NIF scene graphs are **unsupported**;
+unsupported formats fail closed rather than fabricate triangles.
+
+`python -m pocketport skyrim-validate-mesh /private/output/mesh.ppmg`
+checks the serialized geometry. The Citro3D viewer can load this model from
+`sdmc:/3ds/pocketport/skyrim/mesh.ppmg`, decompress its index data on the
+CPU into triangle vertices and draw it with a fixed shader. Models are shown
+**without original Skyrim materials/textures**, and the mesh is not yet placed
+at the associated TES5 REFR transform or combined with a cell scene. Camera
+D-pad controls are maintained. The project does not claim playable Skyrim.
+
+The existing PPSC static markers remain as a fallback. Real Skyrim-derived
+mesh rendering is only verifiable after authorized NIF conversion and
+successful hardware/emulator launch.
+
+
+## Local installation pipeline — limited supported vertical slice
+
+```bash
+python -m pocketport skyrim convert --game-dir "/private/Skyrim Special Edition" \
+  --cell 0x00000200 --target new3ds --output "/private/skyrim3ds"
+```
+
+The cell ID above is **synthetic fixture notation**, not an asserted valid
+Skyrim production location. Find a cell FormID in your own installed master.
+The command recognizes an installation by `Data/Skyrim.esm` and BSA archive
+headers, rejecting mixed 104/105 archives. It reads TES5 static records,
+locates a matching NIF in the user's local BSA index, validates an unskinned
+single-BSTriShape model, and emits `scene.ppsc`, `mesh.ppmg`, plus a
+SHA-256 metadata manifest. The output stays outside the installation and
+must be empty. Do not upload or commit those game-data derivatives.
+
+The first PPMG model is **shown at local NIF coordinates**. REF placement,
+cross-cell streaming, multi-shape models, shader materials, physics,
+texture upload and actual Skyrim gameplay still need engine code.
+
+
+## Real GPU texture data path (optional)
+
+`python -m pocketport skyrim-convert-texture /private/source.dds
+--max-dimension 128 --out /private/output/texture.t3x` decodes
+the first mip of BC1/DXT1 or BC3/DXT5 DDS, downsizes to an 8..256
+power-of-two texture and invokes devkitPro's **real tex3ds encoder**.
+It requires Pillow and the installed `tex3ds` executable. Unsupported
+BC7, normal-map conventions, mipchain dependency and shader-specific
+material bindings are explicitly not supported. Converted game data
+remains private. Texture upload is compiled into the native viewer:
+if `texture.t3x` is placed at `SD:/3ds/pocketport/skyrim/`,
+the viewer imports it using Tex3DS and maps the NIF UVs onto
+the selected triangle mesh. This is a **single selected texture** and
+not automatic Skyrim material resolution. Emulator/hardware display
+must still be validated.
+
+
+## Missing scene/mesh issue — reproducible fixture
+
+This release supports two separate paths:
+
+1. **No Skyrim installed:** `python -m pocketport skyrim test-scene --output build/skyrim-demo`
+   produces `build/skyrim-demo/3ds/pocketport/skyrim/{scene.ppsc,mesh.ppmg}`.
+   These original geometry files contain a floor and three solid blocks.
+   The Makefile compiles the same fixture geometry **into the .3dsx** as a
+   fallback, so even an empty SD-card directory no longer ends at a missing
+   files screen. This proves the renderer draw path, **not** Skyrim gameplay.
+2. **Authorized Skyrim LE/SE:** `python -m pocketport skyrim convert --game-dir
+   "/private/Skyrim Special Edition" --cell 0xYOURCELL --target new3ds
+   --output build/skyrim3ds`. It preserves the existing root PPSC/PPMG
+   outputs and now also writes a ready-to-copy
+   `build/skyrim3ds/3ds/pocketport/skyrim` folder.
+   Replace 0xYOURCELL with a real cell FormID from your own installation.
+   This supports only a single static BSTriShape mesh and the reference
+   placements; it does not create a full playable Skyrim cell.
+
+### Azahar 2126.2 on Windows
+
+Azahar's emulated SD root is the `sdmc` directory in its user folder.
+On typical Windows installations, the user data folder is under
+`%APPDATA%/Azahar`. If running with portable user data, use Azahar's
+chosen `user` folder instead. Copy the **contents** of the generated
+`3ds` directory into `sdmc/3ds/`.
+
+Run `pocketport-skyrim.3dsx` in Azahar. When the two asset files are
+not present, the console prints **PocketPort - Built-in 3D Test Scene**
+and the top screen is scheduled to draw triangles from the compiled
+fixture. Circle Pad and D-pad move the camera, START exits.
+
+The user has reported Azahar 2126.2 **booting the earlier app** and
+showing a missing-assets screen. This is not evidence that this new
+3D fallback has been rendered until a fresh emulator launch confirms it.
