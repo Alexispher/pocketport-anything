@@ -11,11 +11,15 @@ jobs:
         with:
           python-version: '3.12'
       - name: Install optional image dependency
-        run: python -m pip install -r requirements-optional.txt
+        run: python -m pip install -r requirements-optional.txt pytest
       - name: Syntax validation
         run: python -m compileall -q pocketport
       - name: Run test suite (includes C compilation)
         run: python -m unittest discover -s tests -v
+      - name: Pytest regression suite
+        run: python -m pytest -q
+      - name: AAA offline research smoke test
+        run: python -m pocketport research "GTA SA"
       - name: Translation reference comparison
         run: python -m pocketport verify-ir examples/translation-demo/score.ppir
       - name: Build original portable game for host

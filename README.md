@@ -78,3 +78,16 @@ Licensed under the MIT License. The repository originally contained this README 
 `python -m pocketport inspect-nup /path/to/authorized.nup` authenticates an NUP v1 table of contents and prints package-level identifiers without extracting or executing any file. This is a host-side diagnostic informed by the publicly documented Lichii archive structure; it is **not** a Switch 2 to 3DS port or a proof of game identity. See `docs/ZELDA_CASE_STUDY.md` and `docs/PORT_REFERENCE_IMPLEMENTATIONS.md`.
 
 The PPIR translator also supports `and`, `or`, `xor`, and masked `shl`/`shr` (uint32) with compiled reference-equivalence tests; it still does not accept machine-code binaries.
+
+
+## AAA investigation (experimental and read-only)
+
+The `detect-engine` CLI command inspects bounded file signatures and engine-family clues;
+`inspect-executable` identifies ELF/PE machine architectures without execution.
+`research "Skyrim"` and `discover-ports "GTA San Andreas"` query a small curated
+offline catalogue; `discover-ports "GTA San Andreas" --live` optionally searches
+public GitHub repository metadata (not validated ports). `compatibility <directory>`
+reports observed file bytes and unknown application RAM separately. The confined
+read-only MCP server can be run with `python -m pocketport.mcp --workspace <directory>`.
+See [docs/AAA_INVESTIGATION.md](docs/AAA_INVESTIGATION.md) for exact support.
+No command claims that an AAA game runs on Nintendo 3DS.

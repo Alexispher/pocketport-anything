@@ -7,6 +7,8 @@ from pathlib import Path
 import shutil
 import sys
 
+from .aaa import compatibility, detect_engine, inspect_executable, research_game
+from .discovery import search_repositories
 from .assets import PROFILES, optimize
 from .build import build_project, manifest_path, report_project, test_project
 from .environment import doctor
@@ -27,6 +29,23 @@ def _project_source(args: argparse.Namespace) -> tuple[Path, dict]:
 def run(args: argparse.Namespace) -> dict:
     if args.cmd == "doctor":
         return doctor()
+    if args.cmd == "detect-engine":
+        return detect_engine(Path(args.directory), max_files=args.max_files)
+    if args.cmd == "inspect-executable":
+        return inspect_executable(Path(args.file))
+    if args.cmd == "research":
+        return research_game(args.game)
+    if args.cmd == "discover-ports":
+        if args.live:
+            return search_repositories(args.game, limit=args.limit)
+        entry = research_game(args.game)
+        return {"game": entry["game"], "status": entry["status"],
+                "known_ports": entry.get("known_ports", []),
+                "sources": entry.get("sources", []),
+                "discovery_scope": entry["discovery_scope"]}
+    if args.cmd == "compatibility":
+        return compatibility(Path(args.directory), args.target,
+                             available_application_bytes=args.application_bytes)
     if args.cmd == "demo":
         return run_original_demo(Path(args.out))
     if args.cmd == "inspect-nup":
@@ -106,6 +125,21 @@ def parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="pocketport", description="Evidence-first Nintendo 3DS porting framework")
     commands = p.add_subparsers(dest="cmd", required=True)
     commands.add_parser("doctor", help="Discover installed toolchains without changing your system")
+    engine = commands.add_parser("detect-engine", help="Detect read-only engine-family candidates")
+    engine.add_argument("directory")
+    engine.add_argument("--max-files", type=int, default=5000)
+    exe = commands.add_parser("inspect-executable", help="Read-only ELF/PE architecture inspection")
+    exe.add_argument("file")
+    research = commands.add_parser("research", help="Query curated offline AAA investigation entries")
+    research.add_argument("game")
+    ports = commands.add_parser("discover-ports", help="Curated or optional public GitHub port discovery")
+    ports.add_argument("game")
+    ports.add_argument("--live", action="store_true", help="Search public GitHub metadata")
+    ports.add_argument("--limit", type=int, default=5)
+    comp = commands.add_parser("compatibility", help="Investigate engine evidence and memory gaps")
+    comp.add_argument("directory")
+    comp.add_argument("--target", choices=("old3ds", "new3ds"), default="new3ds")
+    comp.add_argument("--application-bytes", type=int, help="User-measured process application RAM")
     demo = commands.add_parser("demo", help="Exercise integrated original game inspect->plan->translate->optimize->build->test")
     demo.add_argument("--out", required=True)
     nupcmd = commands.add_parser("inspect-nup", help="Read-only authenticated NUP v1 header and package index")
