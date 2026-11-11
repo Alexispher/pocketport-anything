@@ -6,6 +6,7 @@ on:
       - feature/antigravity-skyrim-rendering
       - feature/universal-3ds-dual-screen-skill
       - feature/full-game-porting-framework
+      - feature/porting-engine-integration
   pull_request:
 jobs:
   skyrim-host:
@@ -28,6 +29,19 @@ jobs:
           python -m pocketport screen-assess examples/source-port/display-profile.json
           python -m pocketport screen-header examples/source-port/display-profile.json --out /tmp/pp_screen_profile.h
           grep PP_PROFILE_ENABLED_PAGES /tmp/pp_screen_profile.h
+      - name: Unified game source audit and compatibility engine
+        run: |
+          python -m pocketport source-audit . --target new3ds > /tmp/pocketport-source-audit.json
+          python -m pocketport port-assess . --target new3ds > /tmp/pocketport-port-assess.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          a=json.loads(Path("/tmp/pocketport-source-audit.json").read_text())
+          c=json.loads(Path("/tmp/pocketport-port-assess.json").read_text())
+          assert a["verification"]["source_inspection"]
+          assert c["verification"]["source_inspected"] and not c["verification"]["gameplay"]
+          assert c["source_files"] if "source_files" in c else c["file_count"] > 0
+          PY
       - name: Source-port pipeline CLI smoke test on repository source
         run: |
           python -m pocketport inspect-source . --out /tmp/pocketport-own-source.json
@@ -217,7 +231,7 @@ jobs:
 
   abbaye-real-native-game:
     name: Real GPL game source to native .3dsx (independent of PocketPort examples)
-    if: github.ref == 'refs/heads/feature/full-game-porting-framework' || github.event.pull_request.head.ref == 'feature/full-game-porting-framework'
+    if: github.ref == 'refs/heads/feature/full-game-porting-framework' || github.event.pull_request.head.ref == 'feature/full-game-porting-framework' || github.ref == 'refs/heads/feature/porting-engine-integration' || github.event.pull_request.head.ref == 'feature/porting-engine-integration'
     runs-on: ubuntu-latest
     container:
       image: devkitpro/devkitarm:20260610
