@@ -218,3 +218,12 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Authorized local Skyrim content, external to the public source tree
+*.bsa
+*.esm
+*.esp
+*.nif
+*.dds
+*.ppsc
+work-private/
