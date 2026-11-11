@@ -28,6 +28,28 @@ class TranslationTests(unittest.TestCase):
             self.assertEqual(h.read_text(), head)
             self.assertEqual(c.read_text(), code)
 
+    def test_masked_shift_and_bitwise_reference(self):
+        src = """func bitops a b
+        and both a b
+        or either a b
+        xor diff both either
+        shl shifted diff b
+        shr result shifted b
+        ret result
+        end
+        """
+        program = parse(src)
+        vectors = [(0, 0), (1, 1), (0xffffffff, 0xffffffff),
+                   (0x80000000, 32), (0x1001, 33), (0x12345678, 40),
+                   (0, 0xffffffff)]
+        self.assertEqual(verify_host(program, vectors=vectors)["vectors_passed"], len(vectors))
+
+    def test_shift_counts_masked_to_5_bits(self):
+        program = parse("func shift value count\nshl out value count\nret out\nend")
+        self.assertEqual(execute(program, 1, 32), 1)
+        self.assertEqual(execute(program, 1, 33), 2)
+        self.assertEqual(execute(program, 1, 0xffffffff), 0x80000000)
+
     def test_unknown_instruction_rejected(self):
         with self.assertRaisesRegex(IRValidationError, "Unsupported"):
             parse("func x a\nsyscall b a\nret a\nend")

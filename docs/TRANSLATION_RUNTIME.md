@@ -42,3 +42,7 @@ Architecture specific decoders must identify **format**, ISA revision, CPU mode,
 - Graphics backend: direct citro2d primitives in original example, **not** a universal shader translation layer.
 
 Any additional module must have native tests, a documented capability matrix and explicit unavailable-operation diagnostics. Do not create empty `cpu/` and `graphics/` folders and pretend those components exist.
+
+## v0.3: bitwise and shift subset
+
+PPIR now implements `and`, `or`, `xor`, `shl`, `shr` on unsigned 32-bit SSA operands. The shift count is masked to five bits (`count & 31`) in both the interpreter and generated C99, avoiding undefined C shifts of 32 bits or more. Host differential tests cover wraparound and oversized counts. This remains an intermediate-language transformation and does **not** decode native instructions or emulate ARM11 hardware.

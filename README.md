@@ -76,3 +76,5 @@ Licensed under the MIT License. The repository originally contained this README 
 ## NUP v1 metadata (read-only)
 
 `python -m pocketport inspect-nup /path/to/authorized.nup` authenticates an NUP v1 table of contents and prints package-level identifiers without extracting or executing any file. This is a host-side diagnostic informed by the publicly documented Lichii archive structure; it is **not** a Switch 2 to 3DS port or a proof of game identity. See `docs/ZELDA_CASE_STUDY.md` and `docs/PORT_REFERENCE_IMPLEMENTATIONS.md`.
+
+The PPIR translator also supports `and`, `or`, `xor`, and masked `shl`/`shr` (uint32) with compiled reference-equivalence tests; it still does not accept machine-code binaries.

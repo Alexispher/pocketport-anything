@@ -1,7 +1,7 @@
 """PocketPort IR v1 interpreter and C99 translation. Not a machine-code decompiler.
 
 Language: `func NAME ARG ...`, `const DEST UNSIGNED`, `add|sub|mul DEST SRC SRC`,
-`ret SRC`, `end`. uint32 modular arithmetic. This is a *precisely scoped* IR backend.
+`ret SRC`, `end`. uint32 modular arithmetic and masked 32-bit shifts. This is a *precisely scoped* IR backend.
 """
 from __future__ import annotations
 
@@ -71,7 +71,7 @@ def parse(source: str) -> Program:
                 raise IRValidationError("Constant must be 0 <= n < 2^32")
             args = [dest, str(number)]
             known.add(dest)
-        elif op in ("add", "sub", "mul"):
+        elif op in ("add", "sub", "mul", "and", "or", "xor", "shl", "shr"):
             if len(args) != 3:
                 raise IRValidationError(f"{op} needs dest and two operand registers")
             dest, a, b = map(_name, args)
@@ -98,11 +98,16 @@ def execute(program: Program, *values: int) -> int:
     for ins in program.body:
         if ins.op == "const":
             state[ins.args[0]] = int(ins.args[1])
-        elif ins.op in ("add", "sub", "mul"):
+        elif ins.op in ("add", "sub", "mul", "and", "or", "xor", "shl", "shr"):
             a, b = state[ins.args[1]], state[ins.args[2]]
             state[ins.args[0]] = {"add": lambda: a + b,
                                    "sub": lambda: a - b,
-                                   "mul": lambda: a * b}[ins.op]() % MOD
+                                   "mul": lambda: a * b,
+                                   "and": lambda: a & b,
+                                   "or": lambda: a | b,
+                                   "xor": lambda: a ^ b,
+                                   "shl": lambda: a << (b & 31),
+                                   "shr": lambda: a >> (b & 31)}[ins.op]() % MOD
         elif ins.op == "ret":
             return state[ins.args[0]]
     raise AssertionError("Parser guaranteed a return")
@@ -118,9 +123,13 @@ def emit_c(program: Program) -> tuple[str, str]:
     for ins in program.body:
         if ins.op == "const":
             rows.append(f"    uint32_t {ins.args[0]} = UINT32_C({ins.args[1]});")
-        elif ins.op in ("add", "sub", "mul"):
-            op = {"add": "+", "sub": "-", "mul": "*"}[ins.op]
-            rows.append(f"    uint32_t {ins.args[0]} = {ins.args[1]} {op} {ins.args[2]};")
+        elif ins.op in ("add", "sub", "mul", "and", "or", "xor", "shl", "shr"):
+            op = {"add": "+", "sub": "-", "mul": "*",
+                  "and": "&", "or": "|", "xor": "^",
+                  "shl": "<<", "shr": ">>"}[ins.op]
+            rhs = (f"({ins.args[2]} & UINT32_C(31))" if ins.op in ("shl", "shr")
+                   else ins.args[2])
+            rows.append(f"    uint32_t {ins.args[0]} = {ins.args[1]} {op} {rhs};")
         else:
             rows.append(f"    return {ins.args[0]};")
     rows += ["}", ""]
@@ -163,4 +172,4 @@ def verify_host(program: Program, vectors: list[tuple[int, ...]] | None = None) 
                 raise AssertionError(f"Interpreter/C mismatch {case}: {expected} != {actual}")
         return {"status": "host-verified", "vectors_passed": len(vectors),
                 "compiler": cc, "command": command,
-                "boundary": "PocketPort IR uint32 arithmetic only; NOT arbitrary machine binaries or 3DS execution"}
+                "boundary": "PocketPort IR uint32 arithmetic/bitwise/shift subset only; NOT arbitrary machine binaries or 3DS execution"}
