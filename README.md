@@ -52,8 +52,8 @@ The focus is ambitious: **large, complex 3D games and their engines**. Small ori
 | Native 3DS example sources | **Implemented as source** | libctru/citro2d template; build needs devkitPro |
 | Asset image preparation | **Implemented** | Pillow-based resizing/padding; optional `tex3ds` integration |
 | Automated host tests | **Implemented** | Python and native C regression coverage |
-| Engine fingerprinting across AAA games | **Planned** | No broad engine detector claimed |
-| Automatic GitHub source-port discovery | **Planned** | Research workflow, not an implemented discovery agent |
+| Engine fingerprinting across AAA games | **Experimental** | Bounded family/header candidates; not full game verification |
+| Public GitHub port candidate discovery | **Experimental** | Optional metadata-only search; no verification of builds, branches or gameplay |
 | General-purpose binary lifting/recompilation | **Research goal** | Not implemented |
 | Full AAA game port | **Not demonstrated** | No commercial game claimed playable |
 | Physical 3DS performance validation | **Not demonstrated here** | Requires device/toolchain and repeatable measurements |
@@ -625,3 +625,20 @@ If the idea of an open, evidence-driven Nintendo 3DS porting research framework 
 [Repository](https://github.com/Alexispher/pocketport-anything) · [Issues](https://github.com/Alexispher/pocketport-anything/issues) · [License](LICENSE)
 
 </div>
+
+
+## 🔬 AAA investigation — implementation update
+
+The existing runtime, NUP parser and PPIR translator are preserved. The new
+read-only `detect-engine` command reports bounded engine-family clues (Unity,
+Unreal, Bethesda, RenderWare, RAGE, REDengine, id Tech); `inspect-executable`
+reports ELF/PE machine architecture from headers without executing binaries.
+`research "GTA SA"` consults a small offline AAA investigation catalogue, while
+`discover-ports "Skyrim" --live` optionally searches public GitHub repository
+metadata. These are **unverified candidates**, not working commercial ports.
+`compatibility /isolated/game --target new3ds` tracks unknown memory grants
+separately from on-disk bytes. A restricted, read-only stdio MCP integration
+is available via `python -m pocketport.mcp --workspace /isolated/game`.
+Read [AAA investigation](docs/AAA_INVESTIGATION.md) for commands, source links
+and exact support boundaries. No arbitrary ARM64 or 3DS AAA game conversion is
+claimed. The project is still unvalidated on Azahar and physical 3DS hardware.

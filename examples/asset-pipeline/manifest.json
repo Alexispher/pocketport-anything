@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "game": "PocketPort original asset demonstration",
+  "target": "old3ds",
+  "asset_root": "assets",
+  "evidence": {
+    "source_available": true,
+    "license_ok": true
+  }
+}

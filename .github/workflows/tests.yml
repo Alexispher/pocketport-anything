@@ -1,0 +1,44 @@
+name: Host regression tests
+on:
+  push:
+  pull_request:
+jobs:
+  host-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install optional image dependency
+        run: python -m pip install -r requirements-optional.txt pytest
+      - name: Syntax validation
+        run: python -m compileall -q pocketport
+      - name: Run test suite (includes C compilation)
+        run: python -m unittest discover -s tests -v
+      - name: Pytest regression suite
+        run: python -m pytest -q
+      - name: AAA offline research smoke test
+        run: python -m pocketport research "GTA SA"
+      - name: Translation reference comparison
+        run: python -m pocketport verify-ir examples/translation-demo/score.ppir
+      - name: Build original portable game for host
+        run: python -m pocketport build examples/source-port/project.json --host
+      - name: Exercise original host game
+        run: python -m pocketport test examples/source-port/project.json --host
+      - name: Prepare original asset sample
+        run: python -m pocketport optimize examples/asset-pipeline/manifest.json --out /tmp/pocketport-ci-assets --profile balanced
+      - name: Exercise unified original game workflow
+        run: python -m pocketport demo --out /tmp/pocketport-ci-unified
+      - name: Generate host-only report
+        run: python -m pocketport report examples/source-port/project.json --out /tmp/pocketport-ci-report.json
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pocketport-host-evidence
+          path: |
+            examples/source-port/build-host/*-evidence.json
+            /tmp/pocketport-ci-report.json
+            /tmp/pocketport-ci-assets/asset-report.json
+          if-no-files-found: warn
