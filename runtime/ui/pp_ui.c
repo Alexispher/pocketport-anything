@@ -83,7 +83,7 @@ void pp_ui_tick(PPUIState *s) {
     }
 }
 int pp_ui_is_paused(const PPUIState *s) {
-    return !s || s->page!=PP_PAGE_HUD;
+    return !s || s->page==PP_PAGE_PAUSE || s->page==PP_PAGE_HELP || s->page==PP_PAGE_ERROR;
 }
 static PPUIPage next_visible(PPUIState *s,int direction) {
     const PPUIPage tabs[]={PP_PAGE_HUD,PP_PAGE_MAP,PP_PAGE_INVENTORY};
@@ -184,6 +184,8 @@ PPUIResult pp_ui_step(PPUIState *s,const PPUIInput *i) {
         }
     }
     result.page_changed=s->page!=before;
+    result.simulation_allowed=s->page==PP_PAGE_HUD ||
+        s->page==PP_PAGE_MAP || s->page==PP_PAGE_INVENTORY;
     result.gameplay_allowed=s->page==PP_PAGE_HUD && !i->touch_active &&
         !(i->pressed & (s->bindings.confirm|s->bindings.back|
                         s->bindings.pause|s->bindings.help|

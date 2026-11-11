@@ -60,6 +60,7 @@ typedef struct {
 typedef struct {
     unsigned actions;
     int gameplay_allowed;
+    int simulation_allowed; /* MAP/BAG tick but never consume gameplay controls */
     int page_changed;
 } PPUIResult;
 

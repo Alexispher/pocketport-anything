@@ -34,8 +34,8 @@ START exits; B restarts from gameplay; X pauses, Y opens help; L/R cycles
 HUD, MAP and BAG. D-pad UP/DOWN and A navigate pause without touching
 the screen. Bottom tabs/footer/buttons also respond to touch.
 Touch activation occurs once per physical press, not once per held
-frame, including dragging away from the touched area. Non-gameplay
-UI pages suppress gameplay updates and unintended controls.
+frame, including dragging away from the touched area. MAP/BAG remain live while their input is isolated from gameplay.
+PAUSE and HELP freeze the simulation until the player returns.
 
 PPUIInput is platform-independent. PPUIResult determines when the game
 may update. PPUIState holds the current page, return page and bounded

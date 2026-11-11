@@ -41,6 +41,7 @@ int main(void) {
     i.pressed=PP_UI_KEY_X;
     r=pp_ui_step(&u,&i);
     S(u.page==PP_PAGE_PAUSE && !r.gameplay_allowed && r.page_changed);
+    S(!r.simulation_allowed && pp_ui_is_paused(&u));
     i.pressed=PP_UI_KEY_DOWN; pp_ui_step(&u,&i);
     S(u.selected==1);
     i.pressed=PP_UI_KEY_A;
@@ -49,7 +50,8 @@ int main(void) {
     /* Touch on MAP tab is edge triggered: no second activation while held. */
     i.pressed=0;i.touch_active=1;i.touch_x=125;i.touch_y=20;
     r=pp_ui_step(&u,&i);
-    S(u.page==PP_PAGE_MAP && !r.gameplay_allowed);
+    S(u.page==PP_PAGE_MAP && !r.gameplay_allowed && r.simulation_allowed);
+    S(!pp_ui_is_paused(&u));
     i.touch_x=238;i.touch_y=25;
     r=pp_ui_step(&u,&i);
     S(u.page==PP_PAGE_MAP && !r.page_changed);

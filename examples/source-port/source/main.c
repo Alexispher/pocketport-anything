@@ -68,6 +68,10 @@ int main(int argc,char **argv) {
             if((held & KEY_DLEFT) || circle.dx < -40)move|=PP_INPUT_LEFT;
             if((held & KEY_DRIGHT) || circle.dx > 40)move|=PP_INPUT_RIGHT;
             pp_game_step(&game,move);
+        } else if(result.simulation_allowed) {
+            /* No game controls while interacting with secondary UI,
+               but the gameplay world keeps ticking on MAP/BAG. */
+            pp_game_step(&game,0u);
         }
         if(game.score>old_score)pp_ui_message(&ui,"Star collected!",150);
         old_score=game.score;
