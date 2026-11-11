@@ -1,0 +1,1 @@
+Hello from a real read-only RomFS asset in PocketPort!

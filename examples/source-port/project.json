@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "game": "Star Catcher (original portable C source-port demonstration)",
+  "target": "new3ds",
+  "source_dir": "source",
+  "game_core": "../../runtime/core/pp_game.c",
+  "generated_function": "generated/score.c",
+  "translation_input": "../translation-demo/score.ppir",
+  "evidence": {
+    "source_available": true,
+    "license_ok": true
+  }
+}

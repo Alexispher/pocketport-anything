@@ -1,0 +1,8 @@
+# PocketPort IR v1; original game scoring component.
+# 32-bit unsigned arithmetic with wrap modulo 2^32.
+func score_bonus catches difficulty
+add raw catches difficulty
+const multiplier 3
+mul result raw multiplier
+ret result
+end
