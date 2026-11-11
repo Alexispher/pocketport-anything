@@ -15,6 +15,10 @@ from .environment import doctor
 from .demo import run_original_demo
 from .inventory import inventory, sha256, write_json
 from .nup import inspect_nup, NupError
+from .skyrim.bsa import inspect_bsa, BSAError
+from .skyrim.tes5 import inspect_plugin, TES5Error
+from .skyrim.dds import convert_dds, DDSError
+from .skyrim.scene import convert_plugin, read_scene, SceneError
 from .planning import choose
 from .translation import parse, verify_host, write_c
 
@@ -50,6 +54,20 @@ def run(args: argparse.Namespace) -> dict:
         return run_original_demo(Path(args.out))
     if args.cmd == "inspect-nup":
         return inspect_nup(Path(args.file))
+    if args.cmd == "skyrim-inspect-bsa":
+        return inspect_bsa(Path(args.file))
+    if args.cmd == "skyrim-inspect-plugin":
+        return inspect_plugin(Path(args.file))
+    if args.cmd == "skyrim-convert-dds":
+        return convert_dds(Path(args.file), Path(args.out))
+    if args.cmd == "skyrim-convert-scene":
+        return convert_plugin(Path(args.file), Path(args.out),
+                              cell_id=(int(args.cell_id, 0) if args.cell_id else None))
+    if args.cmd == "skyrim-validate-scene":
+        path = Path(args.file)
+        if path.is_symlink() or path.stat().st_size > 50000:
+            raise ValueError("Scene file invalid or exceeds 50 KB cap")
+        return {"status": "valid", "scene": read_scene(path.read_bytes())}
     if args.cmd == "hash":
         p = Path(args.file)
         if not p.is_file() or p.is_symlink():
@@ -144,6 +162,19 @@ def parser() -> argparse.ArgumentParser:
     demo.add_argument("--out", required=True)
     nupcmd = commands.add_parser("inspect-nup", help="Read-only authenticated NUP v1 header and package index")
     nupcmd.add_argument("file")
+    sk_bsa = commands.add_parser("skyrim-inspect-bsa", help="Skyrim 2011 BSA v104 safe index inspection")
+    sk_bsa.add_argument("file")
+    sk_esm = commands.add_parser("skyrim-inspect-plugin", help="Limited TES5 STAT/CELL/REFR scanner")
+    sk_esm.add_argument("file")
+    sk_dds = commands.add_parser("skyrim-convert-dds", help="Convert DXT1 DDS to RGB565 intermediate")
+    sk_dds.add_argument("file")
+    sk_dds.add_argument("--out", required=True)
+    sk_scene = commands.add_parser("skyrim-convert-scene", help="Serialize authentic TES5 static placements to PPSC")
+    sk_scene.add_argument("file")
+    sk_scene.add_argument("--out", required=True)
+    sk_scene.add_argument("--cell-id", help="Cell FormID decimal or 0x hexadecimal")
+    sk_verify = commands.add_parser("skyrim-validate-scene", help="Validate PPSC scene package without execution")
+    sk_verify.add_argument("file")
     hashcmd = commands.add_parser("hash", help="SHA-256 hash an existing file")
     hashcmd.add_argument("file")
     inspect = commands.add_parser("inspect", help="Read-only file inventory and signature identification")
@@ -196,7 +227,8 @@ def main(argv: list[str] | None = None) -> int:
     args = parser().parse_args(argv)
     try:
         data = run(args)
-    except (OSError, KeyError, ValueError, RuntimeError, AssertionError) as exc:
+    except (OSError, KeyError, ValueError, RuntimeError, AssertionError,
+            BSAError, TES5Error, DDSError, SceneError) as exc:
         print(json.dumps({"status": "failed", "error": str(exc)}, indent=2), file=sys.stderr)
         return 2
     print(json.dumps(data, indent=2, sort_keys=True))

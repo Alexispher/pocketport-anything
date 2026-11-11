@@ -642,3 +642,15 @@ is available via `python -m pocketport.mcp --workspace /isolated/game`.
 Read [AAA investigation](docs/AAA_INVESTIGATION.md) for commands, source links
 and exact support boundaries. No arbitrary ARM64 or 3DS AAA game conversion is
 claimed. The project is still unvalidated on Azahar and physical 3DS hardware.
+
+
+## Skyrim 2011 native-runtime proof-of-concept
+
+The experimental `pocketport.skyrim` package implements a read-only BSA 104
+index/member decoder, TES5 plugin STAT/CELL/REFR scanner, DXT1 DDS to RGB565
+**intermediate** conversion and PPSC v1 static placement scene serialization.
+A portable C loader validates these packages. The new Citro3D frontend (source
+only until cross-built) draws reference **markers**, not Skyrim's actual NIF
+geometry, lighting, or gameplay. No original assets are in git.
+
+For commands and exact boundaries, see [Skyrim Native Initiative](docs/SKYRIM_NATIVE.md).
