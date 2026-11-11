@@ -74,3 +74,17 @@ I want to play <game> on Nintendo 3DS.
 ```
 
 Investigate the game before choosing an approach. Answer with the selected evidence-based route and start implementing it if permitted and feasible. Respect third-party licenses and the user's authorized files. See `docs/PORTING_STRATEGIES.md`, `docs/VALIDATION.md` and `docs/ZELDA_CASE_STUDY.md`.
+
+
+## Mandatory two-display porting assessment (current native platform API)
+
+1. Audit both 400x240 top and 320x240 bottom logical coordinate spaces before drawing.
+2. Inspect source game viewports and input interactions; determine top/bottom roles independently. Do not interpret rotated GPU storage as touch coordinates.
+3. Run python -m pocketport screen-assess examples/source-port/display-profile.json. Validate schema v1, missing app memory evidence and touch/physical fallbacks.
+4. Reuse runtime/ui/pp_ui.h for platform-independent menus, input priority and touch press/hold/release logic. Reuse runtime/platform/pp_display_3ds.h for target ownership, one Citro3D frame and two Citro2D scenes.
+5. Keep original source game's top rendering and gameplay core intact. Game updates must be suppressed by UIResult when menus are open, without losing existing physical controls.
+6. Use the original Star Catcher source-port as the regression demo. The Skyrim 3D viewer remains a separate supported example.
+7. Cross-compile Star Catcher and Skyrim with devkitARM; record SHA. Test both screens, touch and buttons in Azahar; do not claim that CI compilation proves displayed graphics.
+8. Diagnose with docs/AGENT_DEBUGGING.md and document evidence separately (HOST_TESTED vs CROSS_COMPILED vs EMULATOR_BOOTED vs HARDWARE_VALIDATED).
+
+The canonical coding-agent skill is the root SKILL.md, referenced from .agents/skills/pocketport-anything/SKILL.md and .claude/skills/pocketport-anything/SKILL.md without duplicating instructions. See docs/DUAL_SCREEN.md. Never infer compatibility with unrelated commercial engines.

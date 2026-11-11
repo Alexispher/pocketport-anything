@@ -63,6 +63,9 @@ int main(void) {
     i.touch_active=0;pp_ui_step(&u,&i);
     i.pressed=PP_UI_KEY_B;
     pp_ui_step(&u,&i);
+    S(u.page==PP_PAGE_PAUSE);
+    i.pressed=PP_UI_KEY_B;
+    pp_ui_step(&u,&i);
     S(u.page==PP_PAGE_INVENTORY);
     i.pressed=PP_UI_KEY_X;
     pp_ui_step(&u,&i);

@@ -41,3 +41,25 @@ Game discovery is a **research task**, not file-extension inference. A 3DSX buil
 ## Planned, not implemented
 
 Full CPU ISA decoders and lifting, target ABI emulation, direct ARM64-to-ARM11 recompilation, arbitrary PC graphics shader translation, complete 3D scene format converters, low-latency NDSP streaming, automatic Azahar input/screenshot automation, and on-device allocation/VRAM profiling require additional native engineering and rigorous validation. They are not represented by fake placeholder modules.
+
+
+## Implemented screen/input subsystem
+
+Native Star Catcher now links a **portable** runtime/ui/pp_ui core
+with the 3DS-specific runtime/platform/pp_display_3ds backend.
+The core accepts normalized button/touch snapshots, handles UI
+state (HUD/MAP/INVENTORY/HELP/PAUSE/ERROR), enforces hitbox boundaries,
+suppresses gameplay while menus are active and exposes bounded local
+gameplay notifications.
+
+The backend owns distinct Citro2D top/bottom render targets, allocates a
+glyph buffer once, and draws upper gameplay and lower UI within ONE
+C3D frame. Full or partial cleanup is explicit. The JSON schema v1
+validator and source-port Makefile generate native layout constants.
+The independent Skyrim Citro3D frontend is preserved; shared mixed 3D/2D
+integration with that viewer still needs emulator evidence.
+
+The pocketport screen-assess and screen-header CLI operations, plus
+the read-only MCP display_assessment tool, use the same strict profile
+validation as the Makefile. No commercial-game runtime or hardware test
+is fabricated. Read docs/DUAL_SCREEN.md.

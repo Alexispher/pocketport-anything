@@ -671,3 +671,29 @@ the existing PPSC static-reference markers.
 TES5 static placement resolution with BSA model extraction and bounded
 BSTriShape conversion. This produces one mesh, scene placement markers
 and provenance/hash metadata; it does not reconstruct entire game cells.
+
+
+## Dual-screen native platform foundation
+
+The original Star Catcher now has a portable C UI state machine and native
+**two-screen** Citro2D adapter. The TOP 400x240 display retains gameplay;
+the BOTTOM 320x240 touchscreen has graphical HUD/MAP/BAG/PAUSE/HELP views,
+single-press touch activation, physical-control alternatives and explicit
+pause/resume behavior. Screen roles and touch policy are declared in a
+strict versioned JSON profile used during native builds. The game remains
+the original Star Catcher; it does not imply any commercial-game port.
+
+    python -m pocketport screen-assess examples/source-port/display-profile.json
+    python -m pocketport screen-header examples/source-port/display-profile.json --out /tmp/pp_display_profile_generated.h
+    make -C examples/source-port
+
+Implementation: runtime/ui/pp_ui.h and runtime/platform/pp_display_3ds.h;
+integration: examples/source-port/source/main.c. See docs/DUAL_SCREEN.md
+for controls, constraints, tests and evidence. The existing Skyrim 3D viewer,
+NUP, PPIR, AAA research and conversion pipelines remain preserved.
+
+The dual-screen backend has native source and CI cross-compilation; emulator
+framebuffer, touchscreen and console hardware behavior require independent
+observation. Layout JSON is *not* proof of binary, engine or gameplay
+compatibility. Some bindings are assessment-only until native remapping is
+implemented.

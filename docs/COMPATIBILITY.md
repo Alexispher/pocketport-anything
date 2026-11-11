@@ -14,3 +14,24 @@
 | Emulator/hardware | Instructions and evidence levels | Automated emulator/hardware harness (not present) |
 
 Source research should consult [3DS examples](https://github.com/devkitPro/3ds-examples), [N64Recomp](https://github.com/N64Recomp/N64Recomp), and [REA](https://github.com/morluto/rea). This table is intended to shrink when verifiable new runtime code is implemented, not to be bypassed with a README claim.
+
+
+## Current-screen capability addendum
+
+**Implemented source:** portable C menu/touch state machine, top/bottom
+native Citro2D framebuffer ownership, original Star Catcher top gameplay
+with bottom graphical HUD/MAP/BAG/HELP/PAUSE, generated JSON v1 display
+profile and Python/MCP assessment. See docs/DUAL_SCREEN.md.
+
+**Host tested:** finite control and touch hitbox behavior, pause/resume
+transitions, profile validation, fallback constraints and original
+gameplay regression. **Native build:** requires a verified CI .3dsx
+for the exact head commit. **Not verified here:** actual two-screen
+Azahar pixels, touch navigation or physical-device performance.
+
+**Still unsupported:** arbitrary ARM64-to-ARM11 recompilation, stereo
+rendering in this UI example, arbitrary game engine UI adaptation,
+New 3DS exclusive control requirements, full commercial Skyrim gameplay
+and automatic input rebinding from every profile JSON field.
+
+The older v0.2 table above remains historical; newer native code exists.

@@ -43,6 +43,7 @@ void pp_ui_init(PPUIState *s,unsigned enabled_pages,PPUIPage initial) {
        !(s->enabled_pages&(1u<<initial))) initial=PP_PAGE_HUD;
     s->page=initial;
     s->return_page=initial;
+    s->help_return=initial;
 }
 void pp_ui_message(PPUIState *s,const char *message,unsigned frames) {
     size_t i=0;
@@ -92,6 +93,7 @@ static unsigned pause_selection(PPUIState *s,unsigned choice) {
         return PP_UI_ACTION_RESTART;
     }
     if(choice==2) {
+        s->help_return=PP_PAGE_PAUSE;
         s->page=PP_PAGE_HELP;
         return PP_UI_ACTION_NONE;
     }
@@ -113,7 +115,7 @@ PPUIResult pp_ui_step(PPUIState *s,const PPUIInput *i) {
             if(hit>=0)result.actions=pause_selection(s,(unsigned)hit);
         } else if(s->page==PP_PAGE_HELP || s->page==PP_PAGE_ERROR) {
             if(pp_ui_hit(pp_ui_footer_rect(0),i->touch_x,i->touch_y)) {
-                s->page=s->return_page;
+                s->page=s->page==PP_PAGE_HELP ? s->help_return : s->return_page;
             }
         } else {
             for(j=0;j<3;j++)if(pp_ui_hit(pp_ui_tab_rect(j),i->touch_x,i->touch_y))hit=(int)j;
@@ -125,7 +127,7 @@ PPUIResult pp_ui_step(PPUIState *s,const PPUIInput *i) {
                 s->selected=0;
                 open_page(s,PP_PAGE_PAUSE);
             } else if(pp_ui_hit(pp_ui_footer_rect(1),i->touch_x,i->touch_y)) {
-                s->return_page=s->page;
+                s->help_return=s->page;
                 open_page(s,PP_PAGE_HELP);
             }
         }
@@ -140,9 +142,9 @@ PPUIResult pp_ui_step(PPUIState *s,const PPUIInput *i) {
                 open_page(s,PP_PAGE_PAUSE);
             }
         } else if(i->pressed & PP_UI_KEY_Y) {
-            if(s->page==PP_PAGE_HELP) s->page=s->return_page;
+            if(s->page==PP_PAGE_HELP) s->page=s->help_return;
             else {
-                if(s->page!=PP_PAGE_PAUSE)s->return_page=s->page;
+                s->help_return=s->page;
                 open_page(s,PP_PAGE_HELP);
             }
         } else if(s->page==PP_PAGE_PAUSE) {
@@ -154,7 +156,8 @@ PPUIResult pp_ui_step(PPUIState *s,const PPUIInput *i) {
                 result.actions=PP_UI_ACTION_RESUME;
             }
         } else if(s->page==PP_PAGE_HELP || s->page==PP_PAGE_ERROR) {
-            if(i->pressed & (PP_UI_KEY_B|PP_UI_KEY_A))s->page=s->return_page;
+            if(i->pressed & (PP_UI_KEY_B|PP_UI_KEY_A))
+                s->page=s->page==PP_PAGE_HELP ? s->help_return : s->return_page;
         } else if(i->pressed & (PP_UI_KEY_L|PP_UI_KEY_R)) {
             s->page=next_visible(s,(i->pressed & PP_UI_KEY_R)?1:-1);
         } else if(i->pressed & PP_UI_KEY_B) {

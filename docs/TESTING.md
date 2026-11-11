@@ -46,3 +46,30 @@ Use [Azahar](https://github.com/azahar-emu/azahar) with authorized homebrew imag
 | L7 Full game validated | Whole game progression, save/load and compatibility coverage |
 
 Report precise missing prerequisites; do not interpolate. The report generator currently establishes L0 for the original game manifest and exposes host evidence separately; it intentionally does not auto-promote 3DS levels.
+
+
+## Dual-screen regression and CI gate
+
+    python -m unittest discover -s tests -q
+    python -m pytest -q
+    python -m pocketport screen-assess examples/source-port/display-profile.json
+    python -m pocketport screen-header examples/source-port/display-profile.json --out /tmp/pp_profile.h
+    python -m pocketport test examples/source-port/project.json --host
+
+The suite compiles runtime/ui/pp_ui.c with a host GCC/Clang C compiler
+using -Wall -Wextra -Werror -pedantic; it checks top/bottom coordinates,
+touch press-vs-held, invalid hitboxes, keyboard navigation, pause gating,
+resume/restart, notification bounds and selected-menu state. Profile
+tests cover malformed JSON, unsupported schema, hardware layouts,
+touch fallback, unverified memory budgets and unsupported stereo build.
+
+The existing .github/workflows/skyrim.yml now cross-compiles **both**
+the original Star Catcher dual-screen example and Skyrim Citro3D viewer
+in a real devkitPro devkitARM container and uploads the actual binaries.
+No fake .3dsx or emulator success is inferred.
+
+Azahar manual regression: confirm upper game remains visible, lower
+graphics-rendered HUD changes pages, touch and D-pad alternatives,
+pause freezes game, release prevents double click, START exit and
+no text clipping. Preserve screenshots and link to exact binary SHA.
+Old/New 3DS hardware verification must be recorded separately.

@@ -17,3 +17,22 @@ python -m pocketport build examples/source-port/project.json --console
 ```
 
 Host output is deterministic and is tested; an installed toolchain, emulator or hardware is required to verify a 3DS binary's build/startup/gameplay. Do not equate native C host tests with 3DS hardware validation.
+
+
+## Native dual-screen UI
+
+Native Star Catcher now draws **upper gameplay** and an independent
+**lower 320x240 graphics-rendered interface**. Bottom tabs provide
+HUD/MAP/BAG, PAUSE/HELP footer and a physical-only navigation path.
+B restarts gameplay, START exits, X pauses, Y opens HELP, L/R cycles
+views; Circle Pad/D-pad still move. Bottom touchscreen presses are
+debounced on edge, and gameplay ticks stop when menus are open.
+
+The validated profile examples/source-port/display-profile.json drives
+the start page, page mask and touch enablement. Run:
+
+    python -m pocketport screen-assess examples/source-port/display-profile.json
+    make -C examples/source-port
+
+No active Azahar/console visual test is inferred from source or CI alone.
+See docs/DUAL_SCREEN.md.

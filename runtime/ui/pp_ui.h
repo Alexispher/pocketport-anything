@@ -46,6 +46,7 @@ typedef struct {
 typedef struct {
     PPUIPage page;
     PPUIPage return_page;
+    PPUIPage help_return; /* nested HELP can return to PAUSE */
     unsigned enabled_pages;
     unsigned selected;    /* pause selection 0..2 */
     int touch_previous;    /* rising edge => one action; hold => none */

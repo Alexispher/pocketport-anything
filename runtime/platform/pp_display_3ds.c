@@ -91,8 +91,7 @@ static void bottom_ui(PPDisplay *d,const PPUIState *ui,const PPHUD *hud) {
     action(d,pp_ui_footer_rect(0),"PAUSE (X)",0);
     action(d,pp_ui_footer_rect(1),"HELP (Y)",0);
     if(ui->event_frames && ui->event_text[0]) {
-        bar(5,235,310,5,ACCENT);
-        /* bounded event data; banner only when layout has safe room */
+        label(d,20,169,0.36f,ui->event_text,ACCENT);
     }
 }
 void pp_display_shutdown(PPDisplay *d) {
