@@ -123,3 +123,24 @@ D-pad controls are maintained. The project does not claim playable Skyrim.
 The existing PPSC static markers remain as a fallback. Real Skyrim-derived
 mesh rendering is only verifiable after authorized NIF conversion and
 successful hardware/emulator launch.
+
+
+## Local installation pipeline — limited supported vertical slice
+
+```bash
+python -m pocketport skyrim convert --game-dir "/private/Skyrim Special Edition" \
+  --cell 0x00000200 --target new3ds --output "/private/skyrim3ds"
+```
+
+The cell ID above is **synthetic fixture notation**, not an asserted valid
+Skyrim production location. Find a cell FormID in your own installed master.
+The command recognizes an installation by `Data/Skyrim.esm` and BSA archive
+headers, rejecting mixed 104/105 archives. It reads TES5 static records,
+locates a matching NIF in the user's local BSA index, validates an unskinned
+single-BSTriShape model, and emits `scene.ppsc`, `mesh.ppmg`, plus a
+SHA-256 metadata manifest. The output stays outside the installation and
+must be empty. Do not upload or commit those game-data derivatives.
+
+The first PPMG model is **shown at local NIF coordinates**. REF placement,
+cross-cell streaming, multi-shape models, shader materials, physics,
+texture upload and actual Skyrim gameplay still need engine code.

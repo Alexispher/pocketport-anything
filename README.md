@@ -664,3 +664,10 @@ native Citro3D frontend can consume the corresponding PPMG file from SD and
 draw the model with a fixed material; full cell reconstruction, textures,
 collision and original gameplay are not implemented. This is separate from
 the existing PPSC static-reference markers.
+
+
+`python -m pocketport skyrim convert --game-dir "/private/Skyrim Special Edition"
+--cell 0xHEX --target new3ds --output /private/skyrim3ds` integrates
+TES5 static placement resolution with BSA model extraction and bounded
+BSTriShape conversion. This produces one mesh, scene placement markers
+and provenance/hash metadata; it does not reconstruct entire game cells.

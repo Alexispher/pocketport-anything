@@ -20,6 +20,7 @@ from .skyrim.tes5 import inspect_plugin, TES5Error
 from .skyrim.dds import convert_dds, DDSError
 from .skyrim.scene import convert_plugin, read_scene, SceneError
 from .skyrim.nif import convert_nif, decode_mesh, NIFError
+from .skyrim.converter import convert_game, ConversionError
 from .planning import choose
 from .translation import parse, verify_host, write_c
 
@@ -64,6 +65,13 @@ def run(args: argparse.Namespace) -> dict:
     if args.cmd == "skyrim-convert-scene":
         return convert_plugin(Path(args.file), Path(args.out),
                               cell_id=(int(args.cell_id, 0) if args.cell_id else None))
+    if args.cmd == "skyrim":
+        if args.skyrim_cmd == "convert":
+            return convert_game(Path(args.game_dir), Path(args.output),
+                                cell_id=int(args.cell, 0),
+                                max_instances=args.max_instances,
+                                triangle_limit=args.triangle_limit)
+        raise ValueError("Unknown Skyrim subcommand")
     if args.cmd == "skyrim-convert-nif":
         return convert_nif(Path(args.file), Path(args.out))
     if args.cmd == "skyrim-validate-mesh":
@@ -183,6 +191,15 @@ def parser() -> argparse.ArgumentParser:
     sk_scene.add_argument("file")
     sk_scene.add_argument("--out", required=True)
     sk_scene.add_argument("--cell-id", help="Cell FormID decimal or 0x hexadecimal")
+    skyrim = commands.add_parser("skyrim", help="Skyrim LE/SE local conversion pipeline")
+    sk_cmd = skyrim.add_subparsers(dest="skyrim_cmd", required=True)
+    sk_convert = sk_cmd.add_parser("convert", help="Convert one authentic cell and static NIF from local Skyrim files")
+    sk_convert.add_argument("--game-dir", required=True)
+    sk_convert.add_argument("--cell", required=True, help="TES5 cell FormID (decimal or 0xhex)")
+    sk_convert.add_argument("--target", choices=("new3ds",), default="new3ds")
+    sk_convert.add_argument("--output", required=True)
+    sk_convert.add_argument("--max-instances", type=int, default=128)
+    sk_convert.add_argument("--triangle-limit", type=int, default=1024)
     sk_nif = commands.add_parser("skyrim-convert-nif", help="Convert limited static BSTriShape NIF to PPMG")
     sk_nif.add_argument("file")
     sk_nif.add_argument("--out", required=True)
