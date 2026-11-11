@@ -45,11 +45,12 @@ The focus is ambitious: **large, complex 3D games and their engines**. Small ori
 |---|---|---|
 | Python CLI | **Implemented** | Inspection, planning, initialization, translation, asset optimization, builds, tests, reports |
 | File inventory | **Implemented** | SHA-256, file signatures and read-only inventory |
+| C/C++ source-port audit | **Implemented (static inspection)** | Bounded platform API, build, entrypoint and game-loop evidence; no automatic source adaptation |
 | NUP v1 metadata inspection | **Implemented** | Header and authenticated index inspection; no extraction or game execution |
 | PocketPort IR → C99 | **Implemented, limited** | Defined uint32 IR subset; **not** arbitrary machine code |
 | IR interpreter and equivalence checks | **Implemented** | Host-side comparison against compiled generated C |
 | Original C game runtime | **Implemented** | Star Catcher gameplay core and deterministic host tests |
-| Native 3DS example sources | **Implemented as source** | libctru/citro2d template; build needs devkitPro |
+| Native 3DS examples | **CROSS_COMPILED (specific apps)** | Genuine devkitARM builds of Star Catcher (dual-screen) and limited Skyrim 3D viewer; same-build dual-screen pixels unverified |
 | Asset image preparation | **Implemented** | Pillow-based resizing/padding; optional `tex3ds` integration |
 | Automated host tests | **Implemented** | Python and native C regression coverage |
 | Engine fingerprinting across AAA games | **Experimental** | Bounded family/header candidates; not full game verification |
@@ -84,6 +85,18 @@ Run the environment diagnostics:
 ```bash
 python -m pocketport doctor
 ```
+
+Audit a legally available game source tree for concrete adaptation points:
+
+```bash
+python -m pocketport source-audit /path/to/authorized/game-source --target old3ds
+```
+
+This read-only command reports candidate C/C++ engine entry points, build files,
+platform API call sites and follow-up engineering tasks with file/line evidence.
+It does not rewrite or execute the game and does not establish native playability.
+See [Source project audit](docs/SOURCE_PROJECT_AUDIT.md).
+
 
 Inspect a directory **without modifying its files**:
 
@@ -671,3 +684,29 @@ the existing PPSC static-reference markers.
 TES5 static placement resolution with BSA model extraction and bounded
 BSTriShape conversion. This produces one mesh, scene placement markers
 and provenance/hash metadata; it does not reconstruct entire game cells.
+
+
+## Dual-screen native platform foundation
+
+The original Star Catcher now has a portable C UI state machine and native
+**two-screen** Citro2D adapter. The TOP 400x240 display retains gameplay;
+the BOTTOM 320x240 touchscreen has graphical HUD/MAP/BAG/PAUSE/HELP views,
+single-press touch activation, physical-control alternatives and explicit
+pause/resume behavior. Screen roles and touch policy are declared in a
+strict versioned JSON profile used during native builds. The game remains
+the original Star Catcher; it does not imply any commercial-game port.
+
+    python -m pocketport screen-assess examples/source-port/display-profile.json
+    python -m pocketport screen-header examples/source-port/display-profile.json --out /tmp/pp_display_profile_generated.h
+    make -C examples/source-port
+
+Implementation: runtime/ui/pp_ui.h and runtime/platform/pp_display_3ds.h;
+integration: examples/source-port/source/main.c. See docs/DUAL_SCREEN.md
+for controls, constraints, tests and evidence. The existing Skyrim 3D viewer,
+NUP, PPIR, AAA research and conversion pipelines remain preserved.
+
+The dual-screen backend has native source and CI cross-compilation; emulator
+framebuffer, touchscreen and console hardware behavior require independent
+observation. Layout JSON is *not* proof of binary, engine or gameplay
+compatibility. Six UI bindings (pause/help/back/next/previous/confirm) now remap the
+native portable UI; game movement and START exit remain game-specific.

@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "target": "new3ds",
+  "source": {
+    "viewports": 1,
+    "verified": true,
+    "touch_required": false
+  },
+  "displays": {
+    "top": "gameplay",
+    "bottom": "hud"
+  },
+  "touch": {
+    "mode": "optional",
+    "physical_fallback": true
+  },
+  "controls": {
+    "bindings": {
+      "move_left": [
+        "dpad_left",
+        "circle_left"
+      ],
+      "move_right": [
+        "dpad_right",
+        "circle_right"
+      ],
+      "restart": [
+        "b"
+      ],
+      "pause": [
+        "x"
+      ],
+      "back": [
+        "b"
+      ],
+      "help": [
+        "y"
+      ],
+      "next_page": [
+        "r"
+      ],
+      "previous_page": [
+        "l"
+      ],
+      "quit": [
+        "start"
+      ],
+      "confirm": [
+        "a"
+      ]
+    }
+  },
+  "pages": [
+    "hud",
+    "map",
+    "inventory",
+    "pause",
+    "help"
+  ],
+  "graphics": {
+    "mode": "2d",
+    "stereo_requested": false
+  },
+  "resources": {
+    "application_ram_budget_bytes": null,
+    "source": "unknown"
+  },
+  "unsupported": [
+    "Stereoscopic output not enabled",
+    "Application RAM grant not measured"
+  ]
+}

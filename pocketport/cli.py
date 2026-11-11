@@ -24,6 +24,8 @@ from .skyrim.converter import convert_game, ConversionError
 from .skyrim.fixture import generate as generate_fixture
 from .skyrim.texture_gpu import convert_t3x, DDSError as GPUDDSError
 from .planning import choose
+from .screens import load_profile, assess_profile, write_header
+from .source_audit import inspect_source_project
 from .translation import parse, verify_host, write_c
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -37,6 +39,20 @@ def _project_source(args: argparse.Namespace) -> tuple[Path, dict]:
 def run(args: argparse.Namespace) -> dict:
     if args.cmd == "doctor":
         return doctor()
+    if args.cmd == "screen-assess":
+        profile = load_profile(Path(args.profile))
+        evidence = None
+        if args.evidence:
+            source = Path(args.evidence)
+            if source.is_symlink() or not source.is_file() or source.stat().st_size > 8192:
+                raise ValueError("Invalid screen evidence JSON")
+            evidence = json.loads(source.read_text(encoding="utf-8"))
+        return assess_profile(profile, evidence)
+    if args.cmd == "screen-header":
+        return write_header(Path(args.out), load_profile(Path(args.profile)))
+    if args.cmd == "source-audit":
+        return inspect_source_project(Path(args.directory), target=args.target,
+                                      max_files=args.max_files)
     if args.cmd == "detect-engine":
         return detect_engine(Path(args.directory), max_files=args.max_files)
     if args.cmd == "inspect-executable":
@@ -167,6 +183,16 @@ def parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="pocketport", description="Evidence-first Nintendo 3DS porting framework")
     commands = p.add_subparsers(dest="cmd", required=True)
     commands.add_parser("doctor", help="Discover installed toolchains without changing your system")
+    screens = commands.add_parser("screen-assess", help="Assess a validated 3DS dual-screen/input profile")
+    screens.add_argument("profile")
+    screens.add_argument("--evidence", help="Optional independently verified evidence flags JSON")
+    header = commands.add_parser("screen-header", help="Generate compile-time 3DS UI layout config")
+    header.add_argument("profile")
+    header.add_argument("--out", required=True)
+    audit = commands.add_parser("source-audit", help="Inspect C/C++ code for actionable native porting boundaries")
+    audit.add_argument("directory")
+    audit.add_argument("--target", choices=("old3ds", "new3ds"), default="old3ds")
+    audit.add_argument("--max-files", type=int, default=2500)
     engine = commands.add_parser("detect-engine", help="Detect read-only engine-family candidates")
     engine.add_argument("directory")
     engine.add_argument("--max-files", type=int, default=5000)

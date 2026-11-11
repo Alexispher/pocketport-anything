@@ -35,3 +35,21 @@ libctru exposes RomFS and SD services, HID, DSP audio (`ndsp`) and lifecycle API
 Use devkitPro `devkitARM`, `libctru`, `citro3d`, `citro2d`, `tex3ds`, `3dsxtool` and appropriate rules for `.3dsx`. `.cia`/title packaging is a separate optional, highly configuration-dependent route and is not implemented by the demo. The existence of Luma3DS, Azahar or GodMode9 does not prove any game works; hardware and emulator validation remain required.
 
 Sources: [3dbrew Hardware](https://3dbrew.org/wiki/Hardware), [3dbrew Memory](https://www.3dbrew.org/wiki/Memory_layout), [devkitPro examples](https://github.com/devkitPro/3ds-examples), [3DS NDSP sample](https://github.com/devkitPro/3ds-examples/blob/master/audio/streaming/source/main.c), [citro3d texture implementation](https://github.com/devkitPro/citro3d/blob/master/source/texture.c).
+
+
+## Both-screen runtime constraints
+
+The upper display has 400x240 logical coordinates per eye, and the
+lower touch display has 320x240 logical coordinates. The rotated
+240x400 and 240x320 render-target storage convention is an implementation
+detail: use C2D_CreateScreenTarget(GFX_TOP/GFX_BOTTOM) and independent
+C2D_SceneBegin calls, not a stretched shared framebuffer.
+Touch events returned by libctru HID apply to the *bottom* logical
+coordinate range. PPUIRect validates the 320x240 screen and rejects
+out-of-bounds touches.
+
+A profile's declared memory limit is UNKNOWN unless backed by
+process-specific measurement. On New 3DS, optional C-Stick/ZL/ZR
+must never replace required Old 3DS alternatives. See
+docs/DUAL_SCREEN.md for the native frame lifecycle and documented
+control and render-target ownership.
