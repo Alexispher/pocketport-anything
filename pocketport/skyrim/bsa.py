@@ -163,7 +163,7 @@ class BSAArchive:
                 raise BSAError("Skyrim SE LZ4 requires: pip install lz4") from exc
             compressed = payload[4:]
             try:
-                if compressed.startswith(b"\\x04\\x22\\x4d\\x18"):
+                if compressed.startswith(bytes((4, 34, 77, 24))):
                     with lz4.frame.open(io.BytesIO(compressed), mode="rb") as stream:
                         decoded = stream.read(expected + 1)
                         extra = stream.read(1)

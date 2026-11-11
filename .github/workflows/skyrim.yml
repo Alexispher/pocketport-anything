@@ -28,7 +28,8 @@ jobs:
         shell: bash
         run: |
           if command -v arm-none-eabi-gcc && command -v 3dsxtool && command -v picasso; then
-            make -C examples/skyrim-native
+            export PATH="$DEVKITARM/bin:$DEVKITPRO/tools/bin:$PATH"
+          make -C examples/skyrim-native
           else
             echo "devkitARM/3dsxtool/picasso absent: .3dsx NOT cross-compiled in this runner"
           fi
@@ -38,12 +39,16 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: devkitpro/devkitarm:20260610
+    env:
+      DEVKITPRO: /opt/devkitpro
+      DEVKITARM: /opt/devkitpro/devkitARM
     steps:
       - uses: actions/checkout@v4
       - name: Verify devkitPro toolchain
         shell: bash
         run: |
           set -euxo pipefail
+          export PATH="$DEVKITARM/bin:$DEVKITPRO/tools/bin:$PATH"
           command -v arm-none-eabi-gcc
           command -v picasso
           command -v 3dsxtool

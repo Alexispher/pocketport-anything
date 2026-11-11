@@ -75,10 +75,10 @@ class SkyrimParserTests(unittest.TestCase):
             import lz4.block
             stored = struct.pack("<I",len(original)) + lz4.block.compress(
                 original,store_size=False)
-            folder = b"meshes\\0".replace(b"\\0",b"\\x00")
-            filename = b"fixture.nif\\0".replace(b"\\0",b"\\x00")
+            folder = b"meshes" + bytes([0])
+            filename = b"fixture.nif" + bytes([0])
             offset = 36 + 24 + 1 + len(folder) + 16 + len(filename)
-            content = (struct.pack("<4s8I",b"BSA\\0".replace(b"\\0",b"\\x00"),
+            content = (struct.pack("<4s8I",b"BSA" + bytes([0]),
                                    105,36,3,1,1,len(folder)+1,len(filename),0)
                        +struct.pack("<QIIQ",0,1,0,0)
                        +bytes([len(folder)])+folder
