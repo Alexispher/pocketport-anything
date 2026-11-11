@@ -117,3 +117,15 @@ Preserve their historical sources, credit and content licenses. A
 native build of an existing 3DS port is not proof of a newly built
 generic porting engine. Track every game source's independent
 emulator/hardware gameplay status and save/audio verification.
+
+## Complete source-to-native loop (integration branch)
+
+Read docs/PORTING_ASSESSMENT.md. Begin with inspect-source and source-audit,
+then port-assess with independently supplied controller mapping. Create an
+isolated port workspace; inspect review.patch and port.json. Never run an
+untrusted game's Makefile just to find out whether it might work. Once the
+build script is explicitly authorized, port-build captures genuine
+compiler logs, structured diagnostics, new 3DSX hashes and blockers.
+Use diagnose-build to investigate each failure, change one verified cause
+and repeat CI. Preserve original game behavior and licensing. Progression
+and audio controls require actual emulator/hardware evidence.

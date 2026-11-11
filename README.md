@@ -724,3 +724,14 @@ real title/game states, enemies, maps, audio, save code and assets.
 A separate build investigation uses the original GPLv3 Citro3D port
 of L'Abbaye des Morts, preserving native game logic and RomFS resources.
 Neither upstream codebase is copied into the MIT repository.
+
+## Integrated actual-source engineering commands
+
+`inspect-source` and `source-audit` report complementary C/C++ evidence;
+`port-assess` classifies specific platform issues and `control-coverage`
+checks a developer-declared action inventory for Old/New hardware.
+`port` makes an isolated SHA-256 verified copy and optionally applies
+reviewed game-specific patches. `port-build` runs a trusted real devkitARM
+Makefile only after explicit authorization. `diagnose-build` categorizes
+actual linker/compiler logs without pretending to fix failures.
+Documentation and honest compatibility boundaries: docs/PORTING_ASSESSMENT.md.

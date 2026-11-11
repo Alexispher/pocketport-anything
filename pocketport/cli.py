@@ -27,6 +27,7 @@ from .planning import choose
 from .source_port import inspect_source, port_project, verify_port
 from .source_audit import inspect_source_project
 from .port_assessment import assess_project, load_controls, control_coverage
+from .build_diagnostics import diagnose_file
 from .port_build import native_build, package_native
 from .screens import load_profile, assess_profile, write_header
 from .translation import parse, verify_host, write_c
@@ -42,6 +43,8 @@ def _project_source(args: argparse.Namespace) -> tuple[Path, dict]:
 def run(args: argparse.Namespace) -> dict:
     if args.cmd == "doctor":
         return doctor()
+    if args.cmd == "diagnose-build":
+        return diagnose_file(Path(args.log))
     if args.cmd == "port-assess":
         return assess_project(Path(args.source), target=args.target,
                               controls=load_controls(Path(args.controls)) if args.controls else None)
@@ -213,6 +216,8 @@ def parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="pocketport", description="Evidence-first Nintendo 3DS porting framework")
     commands = p.add_subparsers(dest="cmd", required=True)
     commands.add_parser("doctor", help="Discover installed toolchains without changing your system")
+    diag = commands.add_parser("diagnose-build",help="Classify real compiler/linker log lines without running them")
+    diag.add_argument("log")
     pa = commands.add_parser("port-assess", help="Structured game source and controls compatibility report")
     pa.add_argument("source")
     pa.add_argument("--target",choices=("old3ds","new3ds"),default="new3ds")

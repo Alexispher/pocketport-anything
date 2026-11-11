@@ -16,6 +16,7 @@ import time
 import zipfile
 
 from .source_port import PortError, verify_port
+from .build_diagnostics import diagnose
 
 BUILD_TIMEOUT = 600
 MAX_LOG = 2 * 1024 * 1024
@@ -105,6 +106,7 @@ def native_build(workspace: str | Path, *, execute_trusted_build: bool = False,
     diagnostic_lines = [line.strip()[:450] for line in output.splitlines()
                         if any(token in line.lower() for token in important)]
     result = {"status": status,
+              "structured_diagnostics": diagnose(output),
               "compiler_diagnostics": diagnostic_lines[-30:],
               "log_tail": "\n".join(output.splitlines()[-35:])[-12000:],
               "command": command, "returncode": 0 if status == "CROSS_COMPILED" else (code or 1),
@@ -132,7 +134,16 @@ def package_native(workspace: str | Path, output: str | Path, *,
     if data.get("status") != "CROSS_COMPILED" or not data.get("artifacts"):
         raise PortError("Native build never produced verified 3DSX")
     artifact_names = {x["file"] for x in data["artifacts"]}
+    if len(artifact_names) != len(data["artifacts"]) or len(artifact_names)>32:
+        raise PortError("Invalid artifact manifest: duplicate or excessive binaries")
     for name in artifact_names:
+        # An external build report is NOT trusted as a filesystem path.
+        if (not isinstance(name,str) or not name.startswith("source/") or
+            len(name)>255 or Path(name).is_absolute() or
+            any(part in ("", ".", "..") for part in name.split("/")) or
+            len(Path(name).parts)!=2 or not name.endswith(".3dsx")):
+            raise PortError("Unsafe native artifact location in build evidence")
+
         path_obj = workspace / name
         details = next(x for x in data["artifacts"] if x["file"] == name)
         if not _valid_3dsx(path_obj) or _sha(path_obj) != details["sha256"]:

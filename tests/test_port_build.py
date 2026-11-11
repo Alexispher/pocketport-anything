@@ -75,6 +75,18 @@ class PortBuildSafetyTests(unittest.TestCase):
             with self.assertRaisesRegex(PortError,"corrupted"):
                 native_build(p,execute_trusted_build=True)
 
+    def test_untrusted_artifact_path_cannot_escape_workspace(self):
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d)
+            p=self._workspace(root)
+            malicious={"status":"CROSS_COMPILED",
+                       "artifacts":[{"file":"source/../../outside.3dsx",
+                                     "sha256":"0"*64}]}
+            (p/"native-build.json").write_text(json.dumps(malicious))
+            with self.assertRaisesRegex(PortError,"Unsafe native artifact"):
+                package_native(p,root/"malicious.zip",redistribution_authorized=True)
+            self.assertFalse((root/"malicious.zip").exists())
+
     def test_build_timeout_bounds(self):
         with tempfile.TemporaryDirectory() as d:
             root=Path(d)

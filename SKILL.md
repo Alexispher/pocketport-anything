@@ -79,3 +79,16 @@ Engineering loop: original-game baseline -> inspect symbol/file issues
 -> reviewed patch -> verify SHA -> native compiler logs -> fix exactly
 observed failures -> check real game stages -> emulator -> hardware.
 Do not declare status PLAYABLE without actual same-build progression.
+
+## Imported game engineering
+
+Use the existing read-only source-audit, inspect-source and port-assess
+commands before editing a real project; request a required-action inventory
+for control-coverage and retain unknowns. Read docs/PORTING_ASSESSMENT.md.
+Use port (isolated and SHA-256 gated), review.patch, verify-port, then
+port-build with an *explicitly trusted* build script, and diagnose-build.
+Do not silently disable required game systems. For genuine game acceptance,
+validate the original title, interactions, level transitions, resource
+ownership, save/load and audio on the SAME native binary. A compilation
+is not gameplay or emulator evidence. GPL game assets/code cannot be
+relicensed as MIT by importing them.
