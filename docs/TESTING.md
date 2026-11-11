@@ -26,7 +26,7 @@ make -C templates/3ds-homebrew
 python -m pocketport build examples/source-port/project.json --console
 ```
 
-Record toolchain version, build output, exit code, ELF/3DSX SHA-256, targeted model. A cross-compilation alone corresponds to L2 (not L3-L7). The Makefiles were authored for devkitPro but need toolchain-available verification; do not claim them compiled without a real run.
+Record toolchain version, build output, exit code, ELF/3DSX SHA-256, targeted model. A cross-compilation alone corresponds to L2 (not L3-L7). The Makefiles for Star Catcher and the separate Skyrim viewer have now been cross-compiled with genuine devkitARM in GitHub Actions. Rebuild and record a new hash for each change; a successful cross-compile is not emulator or physical-console validation.
 
 ## Emulator and physical console
 

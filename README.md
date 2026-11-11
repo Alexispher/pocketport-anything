@@ -49,7 +49,7 @@ The focus is ambitious: **large, complex 3D games and their engines**. Small ori
 | PocketPort IR → C99 | **Implemented, limited** | Defined uint32 IR subset; **not** arbitrary machine code |
 | IR interpreter and equivalence checks | **Implemented** | Host-side comparison against compiled generated C |
 | Original C game runtime | **Implemented** | Star Catcher gameplay core and deterministic host tests |
-| Native 3DS example sources | **Implemented as source** | libctru/citro2d template; build needs devkitPro |
+| Native 3DS examples | **CROSS_COMPILED (specific apps)** | Genuine devkitARM builds of Star Catcher (dual-screen) and limited Skyrim 3D viewer; same-build dual-screen pixels unverified |
 | Asset image preparation | **Implemented** | Pillow-based resizing/padding; optional `tex3ds` integration |
 | Automated host tests | **Implemented** | Python and native C regression coverage |
 | Engine fingerprinting across AAA games | **Experimental** | Bounded family/header candidates; not full game verification |

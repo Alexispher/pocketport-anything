@@ -2,10 +2,10 @@
 
 | Feature | Nintendo 3DS implementation candidate | Framework implementation now | Verification |
 | --- | --- | --- | --- |
-| 2D filled rectangles | citro2d / PICA200 | Native and source-port demos | Source written; 3DS toolchain needed for build |
-| 2D assets | citro2d sprite atlas/t3x | Only PNG preparation + optional tex3ds output | Pillow host tests; tex3ds not tested in this environment |
+| 2D filled rectangles | Citro2D / PICA200 | Original game top playfield + independent bottom 2D HUD | Native Star Catcher CROSS_COMPILED in GitHub Actions; no same-build visual verification |
+| 2D assets | Citro2D atlas/t3x | PNG preparation and optional real tex3ds encoder; Skyrim BC1/BC3 GPU upload path | Host decoder tests; real tex3ds smoke in CI; actual texture pixels not separately verified |
 | Texture dimensions | citro3d supported power-of-two constraints | Sized and padded to 8-1024 with UV fraction | Host tests |
-| 3D mesh draw | citro3d vertex buffers, PICA200 | Not implemented | None |
+| 3D mesh draw | Citro3D vertex buffers / PICA200 | Limited Skyrim PPMG native triangle viewer with shader and camera | Authentic devkitARM .3dsx in CI; user previously verified app boots in Azahar, not this same build visually |
 | GLSL/Vulkan/DirectX shaders | Manual replacements / PICA200 vertex programs and fixed-function approximations | Not implemented | None |
 | Skeletal animation | CPU or optimized offline matrix/skinning, budgeted | Not implemented | None |
 | Dynamic lighting | Hardware-supported features and baked approximations | Not implemented | None |
