@@ -1,0 +1,195 @@
+{
+  "schema_version": 1,
+  "notice": "Research targets only; not a list of working Nintendo 3DS ports",
+  "games": [
+    {
+      "game": "The Legend of Zelda: Ocarina of Time (modern NUP)",
+      "aliases": [
+        "Zelda NUP",
+        "Ocarina of Time NUP"
+      ],
+      "engine": "Nintendo proprietary / unverified",
+      "recommended_strategy": "3DS OoT modding or experimental SoH 3DS reconstruction; not direct NUP conversion",
+      "known_ports": [
+        {
+          "name": "soh-3ds",
+          "url": "https://github.com/999sian/soh-3ds",
+          "scope": "Experimental N64-derived SoH port, not modern NUP"
+        }
+      ],
+      "blockers": [
+        "ARM64/runtime and modern shader compatibility unverified"
+      ],
+      "sources": [
+        "https://github.com/zortos293/Lichii",
+        "https://github.com/999sian/soh-3ds"
+      ]
+    },
+    {
+      "game": "Grand Theft Auto: San Andreas",
+      "aliases": [
+        "GTA SA",
+        "GTA San Andreas"
+      ],
+      "engine": "RenderWare-era GTA engine",
+      "recommended_strategy": "Investigate available source and 3DS backend feasibility",
+      "known_ports": [],
+      "blockers": [
+        "No confirmed 3DS game port"
+      ],
+      "sources": [
+        "https://github.com/DK22Pac/plugin-sdk"
+      ]
+    },
+    {
+      "game": "The Elder Scrolls V: Skyrim",
+      "aliases": [
+        "Skyrim"
+      ],
+      "engine": "Creation Engine",
+      "recommended_strategy": "Engine reimplementation research (OpenMW is not Skyrim)",
+      "known_ports": [],
+      "blockers": [
+        "No confirmed 3DS runtime"
+      ],
+      "sources": [
+        "https://github.com/OpenMW/openmw"
+      ]
+    },
+    {
+      "game": "Fallout: New Vegas",
+      "aliases": [
+        "FNV",
+        "Fallout New Vegas"
+      ],
+      "engine": "Bethesda Gamebryo lineage",
+      "recommended_strategy": "Research archive/parser and source engine",
+      "known_ports": [],
+      "blockers": [
+        "No confirmed 3DS runtime"
+      ],
+      "sources": []
+    },
+    {
+      "game": "Fallout 3",
+      "aliases": [],
+      "engine": "Bethesda Gamebryo lineage",
+      "recommended_strategy": "Engine reconstruction research",
+      "known_ports": [],
+      "blockers": [
+        "No confirmed 3DS port"
+      ],
+      "sources": []
+    },
+    {
+      "game": "Grand Theft Auto V",
+      "aliases": [
+        "GTA V",
+        "GTA 5"
+      ],
+      "engine": "RAGE",
+      "recommended_strategy": "Feasibility and original demake/reconstruction",
+      "known_ports": [],
+      "blockers": [
+        "No validated 3DS runtime"
+      ],
+      "sources": []
+    },
+    {
+      "game": "The Legend of Zelda: Breath of the Wild",
+      "aliases": [
+        "BOTW",
+        "Breath of the Wild"
+      ],
+      "engine": "Nintendo proprietary",
+      "recommended_strategy": "Original demake or reconstruction study",
+      "known_ports": [],
+      "blockers": [
+        "No verified 3DS runtime"
+      ],
+      "sources": []
+    },
+    {
+      "game": "The Legend of Zelda: Tears of the Kingdom",
+      "aliases": [
+        "TOTK",
+        "Tears of the Kingdom"
+      ],
+      "engine": "Nintendo proprietary",
+      "recommended_strategy": "Physics/world reconstruction study",
+      "known_ports": [],
+      "blockers": [
+        "No verified 3DS runtime"
+      ],
+      "sources": []
+    },
+    {
+      "game": "Cyberpunk 2077",
+      "aliases": [],
+      "engine": "REDengine 4",
+      "recommended_strategy": "Demake and feasibility research",
+      "known_ports": [],
+      "blockers": [
+        "No supported 3DS engine"
+      ],
+      "sources": []
+    },
+    {
+      "game": "The Witcher 3",
+      "aliases": [
+        "The Witcher 3: Wild Hunt"
+      ],
+      "engine": "REDengine 3",
+      "recommended_strategy": "Asset and runtime feasibility study",
+      "known_ports": [],
+      "blockers": [
+        "No validated 3DS engine"
+      ],
+      "sources": []
+    },
+    {
+      "game": "Dark Souls",
+      "aliases": [],
+      "engine": "FromSoftware proprietary",
+      "recommended_strategy": "Identify exact release; engine research",
+      "known_ports": [],
+      "blockers": [
+        "No verified native port"
+      ],
+      "sources": []
+    },
+    {
+      "game": "Resident Evil 4",
+      "aliases": [],
+      "engine": "Capcom engine differs by release",
+      "recommended_strategy": "Identify exact original/remake build first",
+      "known_ports": [],
+      "blockers": [
+        "No verified 3DS engine"
+      ],
+      "sources": []
+    },
+    {
+      "game": "Red Dead Redemption",
+      "aliases": [],
+      "engine": "RAGE",
+      "recommended_strategy": "Asset and demake feasibility research",
+      "known_ports": [],
+      "blockers": [
+        "No verified 3DS runtime"
+      ],
+      "sources": []
+    },
+    {
+      "game": "Metal Gear Solid V",
+      "aliases": [],
+      "engine": "Fox Engine",
+      "recommended_strategy": "Engine/asset feasibility study",
+      "known_ports": [],
+      "blockers": [
+        "No verified 3DS runtime"
+      ],
+      "sources": []
+    }
+  ]
+}
