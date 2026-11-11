@@ -39,7 +39,7 @@ void pp_ui_init(PPUIState *s,unsigned enabled_pages,PPUIPage initial) {
     memset(s,0,sizeof(*s));
     s->enabled_pages=enabled_pages & PP_UI_DEFAULT_PAGES;
     s->enabled_pages|=PP_UI_ALLOW_HUD | PP_UI_ALLOW_PAUSE | PP_UI_ALLOW_HELP;
-    if(initial<PP_PAGE_HUD || initial>PP_PAGE_INVENTORY ||
+    if(initial>PP_PAGE_INVENTORY ||
        !(s->enabled_pages&(1u<<initial))) initial=PP_PAGE_HUD;
     s->page=initial;
     s->return_page=initial;
@@ -77,7 +77,7 @@ static PPUIPage next_visible(PPUIState *s,int direction) {
     return PP_PAGE_HUD;
 }
 static void open_page(PPUIState *s,PPUIPage page) {
-    if(page>=PP_PAGE_HUD && page<=PP_PAGE_ERROR &&
+    if(page<=PP_PAGE_ERROR &&
        (page==PP_PAGE_ERROR || (s->enabled_pages&(1u<<page)))) {
         s->page=page;
     }
