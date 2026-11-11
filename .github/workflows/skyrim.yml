@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - feature/skyrim-native-runtime
+      - feature/antigravity-skyrim-rendering
   pull_request:
 jobs:
   skyrim-host:
