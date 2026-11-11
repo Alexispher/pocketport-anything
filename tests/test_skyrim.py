@@ -69,6 +69,35 @@ def dds_data() -> bytes:
 
 
 class SkyrimParserTests(unittest.TestCase):
+    def test_skyrim_se_bsa_105_lz4_raw_block(self):
+        with tempfile.TemporaryDirectory() as d:
+            original = b"real header format; synthetic unlicensed payload"
+            import lz4.block
+            stored = struct.pack("<I",len(original)) + lz4.block.compress(
+                original,store_size=False)
+            folder = b"meshes\\0".replace(b"\\0",b"\\x00")
+            filename = b"fixture.nif\\0".replace(b"\\0",b"\\x00")
+            offset = 36 + 24 + 1 + len(folder) + 16 + len(filename)
+            content = (struct.pack("<4s8I",b"BSA\\0".replace(b"\\0",b"\\x00"),
+                                   105,36,3,1,1,len(folder)+1,len(filename),0)
+                       +struct.pack("<QIIQ",0,1,0,0)
+                       +bytes([len(folder)])+folder
+                       +struct.pack("<QII",0,len(stored)|0x40000000,offset)
+                       +filename+stored)
+            p=Path(d)/"se.bsa"
+            p.write_bytes(content)
+            a=BSAArchive(p)
+            self.assertEqual(a.version,105)
+            self.assertEqual(a.read_member("meshes/fixture.nif"),original)
+
+    def test_reject_invalid_105_folder_extent(self):
+        with tempfile.TemporaryDirectory() as d:
+            p=Path(d)/"bad.bsa"
+            p.write_bytes(struct.pack("<4s8I",b"BSA\\0".replace(b"\\0",b"\\x00"),
+                                     105,36,3,1,1,12,10,0)+bytes(10))
+            with self.assertRaises(BSAError):
+                BSAArchive(p)
+
     def test_bsa_uncompressed_reads_member(self):
         with tempfile.TemporaryDirectory() as d:
             p = Path(d) / "test.bsa"

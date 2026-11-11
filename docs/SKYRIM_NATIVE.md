@@ -85,3 +85,19 @@ Skyrim data. A launch in Azahar/3DS has **not** yet been observed.
 Only test execution justifies HOST_TESTED. Native 3DS launch,
 actual Skyrim game data loading, NIF mesh rendering and hardware
 validation require separate future evidence; none is claimed here.
+
+
+## Special Edition archive support (limited)
+
+A BSA archive whose actual header declares version **105** is parsed with
+24-byte folder descriptors and LZ4 compressed members; v104 continues to
+use 16-byte folder descriptors and zlib. The file magic/version are verified
+from bytes, **not** inferred from folder names. This is BSA only: Fallout 4
+BA2/BTDX packages are distinct and explicitly unsupported by this reader.
+The optional host converter dependency is `lz4`; compressed extraction
+has a caller-supplied output budget.
+
+Skyrim LE and SE share many TES5 plugin records, but **mesh dialects
+and BS stream versions vary**. Until a corresponding NIF reader and
+verified scene fixture are available, a successfully read BSA is not
+evidence that an SE world renders.

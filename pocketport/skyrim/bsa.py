@@ -1,17 +1,18 @@
-"""Skyrim Legendary Edition BSA v104: bounded metadata and selective extraction.
+"""Skyrim LE BSA v104 and Special Edition v105: bounded indexing/extraction.
 
 Independent Python implementation; no game assets, decryption or writes to source.
-Other BSA variants and unsafe layouts fail closed rather than being guessed.
+Unsupported BSA variants and unsafe layouts fail closed. BSA105 uses LZ4.
 """
 from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
-import os
+import io
 import struct
 import zlib
 
 _HEADER = struct.Struct("<4s8I")
 _FOLDER = struct.Struct("<QII")
+_FOLDER_SE = struct.Struct("<QIIQ")
 _FILE = struct.Struct("<QII")
 MAX_FILES = 200000
 MAX_FOLDERS = 30000
@@ -49,7 +50,7 @@ def _name(raw: bytes) -> str:
 
 
 class BSAArchive:
-    """Read-only Skyrim 2011 BSA index with bounded member extraction."""
+    """Read-only BSA index and member extraction for Skyrim LE/SE."""
 
     def __init__(self, path: str | Path):
         self.path = Path(path)
@@ -66,22 +67,24 @@ class BSAArchive:
         with self.path.open("rb") as f:
             magic, version, start, flags, folders, count, folder_len, names_len, types = (
                 _HEADER.unpack(_exact(f, _HEADER.size)))
-            if magic != b"BSA\0" or version != 104 or start != _HEADER.size:
-                raise BSAError("Requires Skyrim 2011 BSA v104, 36-byte header")
+            if magic != b"BSA\0" or version not in (104, 105) or start != _HEADER.size:
+                raise BSAError("Only Skyrim LE v104 and SE v105 BSA headers are supported")
             if not (flags & 1 and flags & 2) or flags & ~0x1ff:
                 raise BSAError("Unsupported BSA archive flags")
             if folders > MAX_FOLDERS or count > MAX_FILES or (folders == 0) != (count == 0):
                 raise BSAError("BSA index count outside bounds")
             if folder_len > self.size or names_len > self.size:
                 raise BSAError("Invalid name table lengths")
-            if _HEADER.size + folders * _FOLDER.size > self.size:
+            folder_format = _FOLDER_SE if version == 105 else _FOLDER
+            if _HEADER.size + folders * folder_format.size > self.size:
                 raise BSAError("Truncated folder records")
-            folder_records = [_FOLDER.unpack(_exact(f, _FOLDER.size))
+            folder_records = [folder_format.unpack(_exact(f, folder_format.size))
                               for _ in range(folders)]
             index = []
             seen = 0
             names_bytes = 0
-            for folder_hash, file_count, record_offset in folder_records:
+            for folder_record in folder_records:
+                folder_hash, file_count = folder_record[:2]
                 if file_count > count - seen:
                     raise BSAError("Folder count exceeds declared total")
                 # Skyrim v104 offsets vary by archive flags; the sequential
@@ -152,6 +155,28 @@ class BSAArchive:
         expected = struct.unpack_from("<I", payload)[0]
         if expected > max_bytes:
             raise BSAError("Declared decompressed size exceeds budget")
+        if self.version == 105:
+            try:
+                import lz4.block
+                import lz4.frame
+            except ImportError as exc:
+                raise BSAError("Skyrim SE LZ4 requires: pip install lz4") from exc
+            compressed = payload[4:]
+            try:
+                if compressed.startswith(b"\\x04\\x22\\x4d\\x18"):
+                    with lz4.frame.open(io.BytesIO(compressed), mode="rb") as stream:
+                        decoded = stream.read(expected + 1)
+                        extra = stream.read(1)
+                    if extra:
+                        raise BSAError("LZ4 output exceeds declared length")
+                else:
+                    decoded = lz4.block.decompress(
+                        compressed, uncompressed_size=expected)
+            except (RuntimeError, ValueError, EOFError, OSError) as exc:
+                raise BSAError("Malformed Skyrim SE LZ4 member") from exc
+            if len(decoded) != expected:
+                raise BSAError("LZ4 member uncompressed size mismatch")
+            return decoded
         decoder = zlib.decompressobj()
         try:
             decoded = decoder.decompress(payload[4:], expected + 1)
@@ -166,5 +191,6 @@ class BSAArchive:
 def inspect_bsa(path: str | Path) -> dict:
     archive = BSAArchive(path)
     return {"format": "BSA", "version": archive.version,
+            "edition": "Skyrim Special Edition" if archive.version == 105 else "Skyrim 2011",
             "files": len(archive.members), "sample_paths": archive.names()[:24],
             "status": "index parsed; no Skyrim runtime or asset compatibility implied"}

@@ -32,3 +32,34 @@ jobs:
           else
             echo "devkitARM/3dsxtool/picasso absent: .3dsx NOT cross-compiled in this runner"
           fi
+
+  skyrim-3dsx:
+    name: Native New 3DS cross-compile (no emulator claim)
+    runs-on: ubuntu-latest
+    container:
+      image: devkitpro/devkitarm:20260610
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify devkitPro toolchain
+        shell: bash
+        run: |
+          set -euxo pipefail
+          command -v arm-none-eabi-gcc
+          command -v picasso
+          command -v 3dsxtool
+          test -d "${DEVKITARM:-/opt/devkitpro/devkitARM}"
+          test -f "${DEVKITPRO:-/opt/devkitpro}/libctru/include/3ds.h"
+          arm-none-eabi-gcc --version | head -1
+      - name: Cross-compile native Citro3D viewer
+        shell: bash
+        run: |
+          set -euxo pipefail
+          make -C examples/skyrim-native
+          test -s examples/skyrim-native/pocketport-skyrim.3dsx
+          sha256sum examples/skyrim-native/pocketport-skyrim.3dsx
+      - name: Upload authentic native binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: pocketport-skyrim-native-3dsx
+          path: examples/skyrim-native/pocketport-skyrim.3dsx
+          if-no-files-found: error
