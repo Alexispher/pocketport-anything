@@ -144,3 +144,20 @@ must be empty. Do not upload or commit those game-data derivatives.
 The first PPMG model is **shown at local NIF coordinates**. REF placement,
 cross-cell streaming, multi-shape models, shader materials, physics,
 texture upload and actual Skyrim gameplay still need engine code.
+
+
+## Real GPU texture data path (optional)
+
+`python -m pocketport skyrim-convert-texture /private/source.dds
+--max-dimension 128 --out /private/output/texture.t3x` decodes
+the first mip of BC1/DXT1 or BC3/DXT5 DDS, downsizes to an 8..256
+power-of-two texture and invokes devkitPro's **real tex3ds encoder**.
+It requires Pillow and the installed `tex3ds` executable. Unsupported
+BC7, normal-map conventions, mipchain dependency and shader-specific
+material bindings are explicitly not supported. Converted game data
+remains private. Texture upload is compiled into the native viewer:
+if `texture.t3x` is placed at `SD:/3ds/pocketport/skyrim/`,
+the viewer imports it using Tex3DS and maps the NIF UVs onto
+the selected triangle mesh. This is a **single selected texture** and
+not automatic Skyrim material resolution. Emulator/hardware display
+must still be validated.

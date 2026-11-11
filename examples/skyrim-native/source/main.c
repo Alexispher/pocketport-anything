@@ -5,6 +5,7 @@
  */
 #include <3ds.h>
 #include <citro3d.h>
+#include <tex3ds.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -21,11 +22,13 @@ extern const uint32_t pp_vshader_size;
                   GX_TRANSFER_OUT_FORMAT(GX_TRANSFER_FMT_RGB8)|GX_TRANSFER_SCALING(GX_TRANSFER_SCALE_NO))
 #define MAX_MARKERS 128u
 #define MAX_DRAW_TRIANGLES 1024u
-typedef struct {float x,y,z;} Vertex;
+typedef struct {float x,y,z,u,v;} Vertex;
 static PPScene scene;
 static PPMesh *model;
 static bool has_scene=false;
 static bool has_model=false;
+static bool has_texture=false;
+static C3D_Tex gpu_texture;
 static Vertex *vertices;
 static DVLB_s *dvlb;
 static shaderProgram_s shader;
@@ -41,6 +44,7 @@ static void shutdown_scene(void) {
     if (initialized_program) {shaderProgramFree(&shader); initialized_program=0;}
     if (dvlb) {DVLB_Free(dvlb); dvlb=NULL;}
     if (model) {free(model); model=NULL;}
+    if (has_texture) {C3D_TexDelete(&gpu_texture);has_texture=false;}
     C3D_Fini();
     gfxExit();
 }
@@ -64,6 +68,18 @@ static bool load_mesh(void) {
     return true;
 }
 
+static bool load_texture(void) {
+    FILE *f=fopen("sdmc:/3ds/pocketport/skyrim/texture.t3x","rb");
+    if(!f) return false;
+    Tex3DS_Texture packed=Tex3DS_TextureImportStdio(f,&gpu_texture,NULL,false);
+    fclose(f);
+    if(!packed) return false;
+    Tex3DS_TextureFree(packed);
+    C3D_TexSetFilter(&gpu_texture,GPU_LINEAR,GPU_NEAREST);
+    C3D_TexBind(0,&gpu_texture);
+    return true;
+}
+
 static bool begin_scene(void) {
     if (!C3D_Init(C3D_DEFAULT_CMDBUF_SIZE)) return false;
     target=C3D_RenderTargetCreate(240,400,GPU_RB_RGBA8,GPU_RB_DEPTH24_STENCIL8);
@@ -81,14 +97,16 @@ static bool begin_scene(void) {
     C3D_AttrInfo *attr=C3D_GetAttrInfo();
     AttrInfo_Init(attr);
     AttrInfo_AddLoader(attr,0,GPU_FLOAT,3);
+    AttrInfo_AddLoader(attr,1,GPU_FLOAT,2);
     C3D_BufInfo *buffer=C3D_GetBufInfo();
     BufInfo_Init(buffer);
     vertices=(Vertex*)linearAlloc(MAX_DRAW_TRIANGLES*3*sizeof(Vertex));
     if (!vertices) return false;
-    BufInfo_Add(buffer,vertices,sizeof(Vertex),1,0x0);
+    BufInfo_Add(buffer,vertices,sizeof(Vertex),2,0x10);
     C3D_TexEnv *env=C3D_GetTexEnv(0);
     C3D_TexEnvInit(env);
-    C3D_TexEnvSrc(env,C3D_Both,GPU_PRIMARY_COLOR,0,0);
+    if(has_model) has_texture=load_texture();
+    C3D_TexEnvSrc(env,C3D_Both,has_texture?GPU_TEXTURE0:GPU_PRIMARY_COLOR,0,0);
     C3D_TexEnvFunc(env,C3D_Both,GPU_REPLACE);
     C3D_FixedAttribSet(1,1.0f,1.0f,1.0f,1.0f);
     return true;
@@ -102,7 +120,8 @@ static void redraw_mesh(void) {
             vertices[i*3+j]=(Vertex){
                 v->xyz[0]*0.01f-camera_x*0.01f,
                 v->xyz[1]*0.01f-camera_y*0.01f,
-                -4.0f-v->xyz[2]*0.01f+camera_z*0.01f};
+                -4.0f-v->xyz[2]*0.01f+camera_z*0.01f,
+                v->uv[0], v->uv[1]};
         }
     }
     GSPGPU_FlushDataCache(vertices,drawn*3*sizeof(Vertex));
@@ -117,9 +136,9 @@ static void redraw_markers(void) {
         float y=(r->offset[1]-camera_y)*0.01f;
         float z=-4.0f-(r->offset[2]-camera_z)*0.01f;
         float size=0.08f;
-        vertices[i*3+0]=(Vertex){x-size,y-size,z};
-        vertices[i*3+1]=(Vertex){x+size,y-size,z};
-        vertices[i*3+2]=(Vertex){x,y+size,z};
+        vertices[i*3+0]=(Vertex){x-size,y-size,z,0,0};
+        vertices[i*3+1]=(Vertex){x+size,y-size,z,0,0};
+        vertices[i*3+2]=(Vertex){x,y+size,z,0,0};
     }
     GSPGPU_FlushDataCache(vertices, drawn*3*sizeof(Vertex));
 }
@@ -152,6 +171,7 @@ int main(void) {
         return 2;
     }
     printf("D-pad: move camera / START: exit\n");
+    printf("GPU texture loaded: %s\n",has_texture?"yes":"no");
     printf("A: nearest static reference\n");
     C3D_Mtx projection;
     Mtx_PerspTilt(&projection,C3D_AngleFromDegrees(65.0f),

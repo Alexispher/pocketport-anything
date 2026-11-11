@@ -62,6 +62,26 @@ jobs:
           make -C examples/skyrim-native
           test -s examples/skyrim-native/pocketport-skyrim.3dsx
           sha256sum examples/skyrim-native/pocketport-skyrim.3dsx
+      - name: Real PICA200 texture encoder smoke test
+        shell: bash
+        run: |
+          set -euxo pipefail
+          export PATH="$DEVKITARM/bin:$DEVKITPRO/tools/bin:$PATH"
+          command -v tex3ds
+          python3 - <<'PY'
+          import struct, zlib
+          def chunk(kind,data):
+              return (struct.pack(">I",len(data))+kind+data+
+                      struct.pack(">I",zlib.crc32(kind+data)&0xffffffff))
+          raw=b"".join(b"\x00"+bytes((220,80,40,255))*16 for _ in range(16))
+          png=(b"\x89PNG\r\n\x1a\n"+
+               chunk(b"IHDR",struct.pack(">IIBBBBB",16,16,8,6,0,0,0))+
+               chunk(b"IDAT",zlib.compress(raw))+chunk(b"IEND",b""))
+          open("/tmp/pocketport-test.png","wb").write(png)
+          PY
+          tex3ds -f rgba8 -o /tmp/pocketport-test.t3x /tmp/pocketport-test.png
+          test -s /tmp/pocketport-test.t3x
+          sha256sum /tmp/pocketport-test.t3x
       - name: Upload authentic native binary
         uses: actions/upload-artifact@v4
         with:

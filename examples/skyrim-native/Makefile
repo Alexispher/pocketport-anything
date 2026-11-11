@@ -10,7 +10,7 @@ BUILD := build
 ARCH := -march=armv6k -mtune=mpcore -mfloat-abi=hard -mtp=soft
 CFLAGS := -std=c99 -O2 -Wall -Wextra -ffunction-sections -fdata-sections $(ARCH) -D__3DS__
 LDFLAGS := -specs=3dsx.specs $(ARCH) -Wl,-Map,$(TARGET).map
-LIBS := -lcitro3d -lctru -lm
+LIBS := -ltex3ds -lcitro3d -lctru -lm
 LIBDIRS := $(CTRULIB) $(DEVKITPRO)/portlibs/3ds
 INCLUDE := -I../../runtime/skyrim $(foreach d,$(LIBDIRS),-I$(d)/include)
 LIBPATHS := $(foreach d,$(LIBDIRS),-L$(d)/lib)
