@@ -63,3 +63,26 @@ The pocketport screen-assess and screen-header CLI operations, plus
 the read-only MCP display_assessment tool, use the same strict profile
 validation as the Makefile. No commercial-game runtime or hardware test
 is fabricated. Read docs/DUAL_SCREEN.md.
+
+
+## Existing-game source adapter architecture (implemented)
+
+The earlier original-game demonstrations are complemented by:
+`pocketport.source_port` (safe bounded inventory, source-level
+backend/dependency token findings with file+line evidence, local include
+graph, copy-once isolated workspace, SHA-256 file manifest and unified
+diff for explicit game-specific adaptations) and
+`pocketport.port_build` (ONLY after explicit trust, real devkitARM
+Makefile execution, measured return code/elapsed time and compiler
+errors, newly built 3DSX header/hash verification and full-source
+licensed release bundling).
+
+No gameplay logic is transplanted into PocketPort: source game code
+remains in an isolated per-game directory and licensed separately.
+MCP exposes a read-only inspect_source operation confined to a
+workspace; CLI implements inspect-source, port, verify-port, port-build,
+and port-package. See docs/SOURCE_PORTING.md.
+
+A desktop SDL2 source adapter and an existing native Citro3D source
+adapter are proof of narrower workflows. They cannot be used as
+evidence that arbitrary desktop engines or commercial games can run.

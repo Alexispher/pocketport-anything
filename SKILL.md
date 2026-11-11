@@ -49,3 +49,33 @@ is separate and must remain working. Keep GPU resource ownership and cleanup bou
 This root skill is the SINGLE authoritative instruction body; other Agent Skills
 discovery entries only point here. Read the focused documentation as necessary,
 not all internals at once.
+
+
+## Real C/C++ game import and adaptation (implemented)
+
+Read docs/SOURCE_PORTING.md. For a real game, first confirm the source revision,
+upstream license, build system, protected assets and gameplay entrypoint.
+Use the bounded scanner and preserve the original:
+
+    python -m pocketport inspect-source /path/to/authorized/game --out /tmp/inspection.json
+    python -m pocketport port /path/to/authorized/game --target new3ds --out /tmp/game-3ds
+    python -m pocketport verify-port /tmp/game-3ds
+
+Do not run imported build scripts by default. For a source tree whose full
+Makefile has been inspected, reviewed and explicitly trusted, a native
+3DS build is opt-in using port-build --execute-trusted-build. Review
+port.json, native-build.log, compiler_diagnostics and the 3DSX SHA-256.
+Only redistribute after verifying source/media rights and opting into
+port-package --redistribution-authorized (bundle corresponding source).
+
+Existing verified game adapters are narrowly scoped and not general
+binary conversion: edgar-sdl2 adjusts SDL2 rendering selection under
+__3DS__; abbaye-native-3ds repairs one historical audio API call in
+a GPLv3 already-native game port. Both preserve original game logic.
+Their tests and pinned external-source CI are evidence of behavior, not
+proof of newly playable games.
+
+Engineering loop: original-game baseline -> inspect symbol/file issues
+-> reviewed patch -> verify SHA -> native compiler logs -> fix exactly
+observed failures -> check real game stages -> emulator -> hardware.
+Do not declare status PLAYABLE without actual same-build progression.

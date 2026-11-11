@@ -5,6 +5,7 @@ on:
       - feature/skyrim-native-runtime
       - feature/antigravity-skyrim-rendering
       - feature/universal-3ds-dual-screen-skill
+      - feature/full-game-porting-framework
   pull_request:
 jobs:
   skyrim-host:
@@ -27,6 +28,12 @@ jobs:
           python -m pocketport screen-assess examples/source-port/display-profile.json
           python -m pocketport screen-header examples/source-port/display-profile.json --out /tmp/pp_screen_profile.h
           grep PP_PROFILE_ENABLED_PAGES /tmp/pp_screen_profile.h
+      - name: Source-port pipeline CLI smoke test on repository source
+        run: |
+          python -m pocketport inspect-source . --out /tmp/pocketport-own-source.json
+          test -s /tmp/pocketport-own-source.json
+          python -m pocketport port . --out /tmp/pocketport-self-audit --target new3ds
+          python -m pocketport verify-port /tmp/pocketport-self-audit
       - name: Preserve existing PPIR compilation
         run: python -m pocketport verify-ir examples/translation-demo/score.ppir
       - name: Preserve existing original game gameplay regressions
@@ -157,4 +164,129 @@ jobs:
         with:
           name: pocketport-skyrim-native-3dsx
           path: examples/skyrim-native/pocketport-skyrim.3dsx
+          if-no-files-found: error
+
+  edgar-external-source:
+    name: Real GPL game source import and audited renderer adaptation (no game-port claim)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Obtain original game under its upstream GPL license (not committed)
+        uses: actions/checkout@v4
+        with:
+          repository: riksweeney/edgar
+          ref: 94d76ebe6a1533caefc89d9201ac3fc4ee974703
+          path: external/edgar
+          persist-credentials: false
+      - name: Inspect real C/SDL2 game and generate narrow reviewed adaptation
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python -m pocketport inspect-source external/edgar --out /tmp/edgar-source-report.json
+          python -m pocketport port external/edgar --target new3ds --adapter edgar-sdl2 --copy-assets --out /tmp/edgar-source-3ds
+          python -m pocketport verify-port /tmp/edgar-source-3ds
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib, json
+          source=Path("external/edgar")
+          output=Path("/tmp/edgar-source-3ds")
+          m=json.loads((output/"port.json").read_text())
+          inspect=json.loads((output/"inspection.json").read_text())
+          assert m["schema_version"]==1 and m["adapter"]=="edgar-sdl2"
+          assert m["status"]=="SOURCE_ADAPTED_NOT_NATIVE_COMPILED"
+          assert len(m["files"])>7000
+          assert len(m["patches"])==1
+          assert inspect["files"]["source_files"]>300
+          assert "src/main.c" in inspect["entrypoint_candidates"]
+          for part in ("src/main.c","src/game.c","src/system/load_save.c",
+                       "src/audio/audio.c","src/graphics/graphics.c"):
+              assert (source/part).read_bytes()==(output/"source"/part).read_bytes(),part
+          assert (source/"src/init.c").read_bytes()!=(output/"source/src/init.c").read_bytes()
+          assert b"SDL_RENDERER_SOFTWARE" in (output/"source/src/init.c").read_bytes()
+          assert (output/"source"/"music").is_dir()
+          assert (output/"source"/"data").is_dir()
+          assert (output/"source"/"sound").is_dir()
+          print("REAL_GAME_SOURCE_IMPORTED",len(m["files"]),"files")
+          print("GAMEPLAY_FILES_PRESERVED",5)
+          print("NATIVE_GAME_BUILD_NOT_YET_ATTEMPTED")
+          print("FULL_GAME_PLAYABILITY_NOT_CLAIMED")
+          PY
+
+  abbaye-real-native-game:
+    name: Real GPL game source to native .3dsx (independent of PocketPort examples)
+    if: github.ref == 'refs/heads/feature/full-game-porting-framework' || github.event.pull_request.head.ref == 'feature/full-game-porting-framework'
+    runs-on: ubuntu-latest
+    container:
+      image: devkitpro/devkitarm:20260610
+    env:
+      DEVKITPRO: /opt/devkitpro
+      DEVKITARM: /opt/devkitpro/devkitARM
+    steps:
+      - uses: actions/checkout@v4
+      - name: Get original existing GPLv3 native source port (pinned independent upstream)
+        uses: actions/checkout@v4
+        with:
+          repository: JeffRuLz/abbayedesmorts-3ds
+          ref: 86caabf56dc3d8f26a181e3cf93b298d11cd4d18
+          path: external/abbaye
+          persist-credentials: false
+      - name: Import whole game source and freely licensed RomFS resources
+        shell: bash
+        run: |
+          set -euxo pipefail
+          export PATH="$DEVKITARM/bin:$DEVKITPRO/tools/bin:$PATH"
+          python3 -m pocketport inspect-source external/abbaye --out /tmp/abbaye-original-report.json
+          python3 -m pocketport port external/abbaye --out /tmp/pocketport-abbaye --target new3ds --adapter abbaye-native-3ds --copy-assets
+          python3 -m pocketport verify-port /tmp/pocketport-abbaye
+          python3 - <<'PY'
+          from pathlib import Path
+          import json
+          a=Path("/tmp/pocketport-abbaye")
+          m=json.loads((a/"port.json").read_text())
+          assert len(m["files"])>=60
+          assert (a/"source/src/main.c").is_file()
+          assert (a/"source/src/game.c").is_file()
+          assert (a/"source/src/enemies.c").is_file()
+          assert (a/"source/src/3ds/graphics.c").is_file()
+          assert (a/"source/src/3ds/audio.c").is_file()
+          assert (a/"source/romfs/data/map.txt").is_file()
+          assert (a/"source/romfs/sounds/AreaIChurchN.wav").is_file()
+          assert (a/"source/COPYING").is_file()
+          assert m["adapter"]=="abbaye-native-3ds"
+          assert len(m["patches"])==2
+          assert {p["path"] for p in m["patches"]}=={"src/history.c","src/startscreen.c"}
+          assert "aud_StopMusic();" in (a/"source/src/history.c").read_text()
+          assert "aud_StopMusic();" in (a/"source/src/startscreen.c").read_text()
+          assert (a/"source/src/history.c").read_bytes() != (Path("external/abbaye")/"src/history.c").read_bytes()
+          print("ACTUAL_GPL_GAME_SOURCE_PRESERVED",len(m["files"]))
+          PY
+      - name: Compile the game's REAL C gameplay code with devkitARM
+        shell: bash
+        run: |
+          set -euxo pipefail
+          export PATH="$DEVKITARM/bin:$DEVKITPRO/tools/bin:$PATH"
+          python3 -m pocketport port-build /tmp/pocketport-abbaye --execute-trusted-build --timeout 360
+          python3 - <<'PY'
+          from pathlib import Path
+          import json
+          r=json.loads(Path("/tmp/pocketport-abbaye/native-build.json").read_text())
+          assert r["status"]=="CROSS_COMPILED"
+          assert any(Path("/tmp/pocketport-abbaye",x["file"]).read_bytes()[:4]==b"3DSX" for x in r["artifacts"])
+          print("REAL_GAME_NATIVE_ARTIFACTS",r["artifacts"])
+          PY
+      - name: Package game, complete GPL source, original resources and provenance
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python3 -m pocketport port-package /tmp/pocketport-abbaye --out /tmp/abbaye-native-source-bundle.zip --redistribution-authorized
+          test -s /tmp/abbaye-native-source-bundle.zip
+          sha256sum /tmp/abbaye-native-source-bundle.zip
+      - name: Upload corresponding source and authentic .3dsx
+        uses: actions/upload-artifact@v4
+        with:
+          name: pocketport-real-game-abbaye-native-with-gpl-source
+          path: /tmp/abbaye-native-source-bundle.zip
           if-no-files-found: error

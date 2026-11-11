@@ -35,3 +35,18 @@ New 3DS exclusive control requirements, full commercial Skyrim gameplay
 and automatic input rebinding from every profile JSON field.
 
 The older v0.2 table above remains historical; newer native code exists.
+
+
+## Real source-project import capability
+
+| Operation | Implemented boundary | Not yet implemented |
+| --- | --- | --- |
+| inspect-source | Bounded C/C++ filesystem scan; source/build scripts, candidate entry points, symbol/file findings, local includes | Full C/C++ AST, dynamic dependency resolution, certainty about unbuilt binaries |
+| port | Isolated source/asset copy, file SHA-256, explicit reviewed targeted source patches | Automatic arbitrary engine conversion |
+| verify-port | Hashes every imported/adapted file, detects modifications/missing outputs | Proof of original gameplay correctness |
+| port-build | Explicitly trusted native Makefile, genuine devkitARM tools, real diagnostics, newly created 3DSX magic/hash | Automatic cross-platform Make/CMake rewrites or SDL2-mixer/TTF port |
+| port-package | Explicit licensing opt-in, complete corresponding source and verified native binary | Redistribution of unlicensed proprietary content |
+| Real game audit | The Legend of Edgar original GPL C source with audio/enemies/saves, and existing GPLv3 Abbaye Citro3D source | Newly authored full AAA game port or observed same-build gameplay |
+
+Read docs/SOURCE_PORTING.md. Cross-compilation and full gameplay
+are intentionally separate release gates.
