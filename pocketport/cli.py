@@ -25,6 +25,7 @@ from .skyrim.fixture import generate as generate_fixture
 from .skyrim.texture_gpu import convert_t3x, DDSError as GPUDDSError
 from .planning import choose
 from .source_port import inspect_source, port_project, verify_port
+from .source_audit import inspect_source_project
 from .port_build import native_build, package_native
 from .screens import load_profile, assess_profile, write_header
 from .translation import parse, verify_host, write_c
@@ -40,6 +41,9 @@ def _project_source(args: argparse.Namespace) -> tuple[Path, dict]:
 def run(args: argparse.Namespace) -> dict:
     if args.cmd == "doctor":
         return doctor()
+    if args.cmd == "source-audit":
+        return inspect_source_project(Path(args.directory), target=args.target,
+                                      max_files=args.max_files)
     if args.cmd == "inspect-source":
         data = inspect_source(Path(args.source))
         if args.out:
@@ -203,6 +207,10 @@ def parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="pocketport", description="Evidence-first Nintendo 3DS porting framework")
     commands = p.add_subparsers(dest="cmd", required=True)
     commands.add_parser("doctor", help="Discover installed toolchains without changing your system")
+    audit = commands.add_parser("source-audit", help="Read-only detailed C/C++ platform API audit")
+    audit.add_argument("directory")
+    audit.add_argument("--target", choices=("old3ds","new3ds"), default="new3ds")
+    audit.add_argument("--max-files",type=int,default=2500)
     source = commands.add_parser("inspect-source", help="Bounded static inspection of a real C/C++ game project")
     source.add_argument("source")
     source.add_argument("--out", help="Write complete JSON findings to disk, print concise summary")
