@@ -697,3 +697,30 @@ framebuffer, touchscreen and console hardware behavior require independent
 observation. Layout JSON is *not* proof of binary, engine or gameplay
 compatibility. Six UI bindings (pause/help/back/next/previous/confirm) now remap the
 native portable UI; game movement and START exit remain game-specific.
+
+
+## Real external game-source engineering pipeline
+
+PocketPort now implements a bounded C/C++ **source project inspector**,
+actionable file/symbol diagnostics, a non-destructive isolated
+source-port workspace, SHA-256 integrity verification, reviewed adapters,
+a trusted native devkitARM Makefile build gate and a corresponding-source
+release packager. These operations do not execute unknown source
+automatically or claim arbitrary game compatibility.
+
+    python -m pocketport inspect-source /private/game-source --out /tmp/source-analysis.json
+    python -m pocketport port /private/game-source --target new3ds --out /tmp/private-game-3ds
+    python -m pocketport verify-port /tmp/private-game-3ds
+
+For a complete, reviewed existing native Makefile, use
+port-build --execute-trusted-build. To package the resulting valid
+.3dsx plus legally distributable corresponding source, use
+port-package --redistribution-authorized. Read docs/SOURCE_PORTING.md
+for exact commands, safety gates, game-source provenance and blocker
+analysis. Imports are not mislabeled as PLAYABLE ports.
+
+Pinned CI has exercised actual source from The Legend of Edgar (GPLv2+):
+real title/game states, enemies, maps, audio, save code and assets.
+A separate build investigation uses the original GPLv3 Citro3D port
+of L'Abbaye des Morts, preserving native game logic and RomFS resources.
+Neither upstream codebase is copied into the MIT repository.

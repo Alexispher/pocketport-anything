@@ -88,3 +88,32 @@ Investigate the game before choosing an approach. Answer with the selected evide
 8. Diagnose with docs/AGENT_DEBUGGING.md and document evidence separately (HOST_TESTED vs CROSS_COMPILED vs EMULATOR_BOOTED vs HARDWARE_VALIDATED).
 
 The canonical coding-agent skill is the root SKILL.md, referenced from .agents/skills/pocketport-anything/SKILL.md and .claude/skills/pocketport-anything/SKILL.md without duplicating instructions. See docs/DUAL_SCREEN.md. Never infer compatibility with unrelated commercial engines.
+
+
+## Complete-game source adaptation and failed-build debugging
+
+Before writing a new demo, examine the actual C/C++ game project:
+run inspect-source to find real source files, includes, entry points,
+SDL/video/audio dependencies, OS assumptions and candidate game loops.
+Build an evidence-backed compatibility map keyed by symbols and files.
+Use port to copy the source (and legally held assets only when requested)
+into a separate directory. Never mutate a user's original game or saves.
+Do not execute an imported Makefile without an explicit trusted-build
+authorization and line-by-line review of critical commands.
+
+For an actual compiler error, inspect the raw native-build.log and
+the returned compiler_diagnostics. Repair a narrowly identified cause;
+add a dedicated adapter or change plan with a unified diff and exact
+original/adapted SHA-256. Regenerate a new private port workspace,
+run verify-port, rebuild with the real devkitARM toolchain, and repeat.
+Never make undefined symbol errors disappear by inserting fake success
+stubs that suppress original gameplay.
+
+Two concrete external cases are in docs/SOURCE_PORTING.md:
+The Legend of Edgar (GPLv2+ desktop SDL2 source, 8308 real files imported)
+and L'Abbaye des Morts (GPLv3 previously native Citro3D game).
+These are external licensed projects, NOT components of the MIT codebase.
+Preserve their historical sources, credit and content licenses. A
+native build of an existing 3DS port is not proof of a newly built
+generic porting engine. Track every game source's independent
+emulator/hardware gameplay status and save/audio verification.

@@ -122,11 +122,15 @@ class ImportedSourceTests(unittest.TestCase):
                 "void aud_StopMusic();\n",encoding="utf-8")
             (source/"src/main.c").write_text(
                 "/* GPL v3 */\nvoid main_game(void){gfx_Init();}\n",encoding="utf-8")
+            (source/"src/startscreen.c").write_text(
+                "void startscreen(void){aud_StopMusic(music); render_title();}\\n".replace("\\n","\n"),
+                encoding="utf-8")
             original="void history(void){ aud_StopMusic(music); keep_game_progression(); }\n"
             (source/"src/history.c").write_text(original,encoding="utf-8")
             adapted=root/"native"
             result=port_project(source,adapted,adapter="abbaye-native-3ds")
-            self.assertEqual(result["patches"],1)
+            self.assertEqual(result["patches"],2)
+            self.assertIn("aud_StopMusic();",(adapted/"source/src/startscreen.c").read_text())
             changed=(adapted/"source/src/history.c").read_text()
             self.assertIn("aud_StopMusic();",changed)
             self.assertIn("keep_game_progression();",changed)

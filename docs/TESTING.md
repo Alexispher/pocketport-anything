@@ -73,3 +73,26 @@ graphics-rendered HUD changes pages, touch and D-pad alternatives,
 pause freezes game, release prevents double click, START exit and
 no text clipping. Preserve screenshots and link to exact binary SHA.
 Old/New 3DS hardware verification must be recorded separately.
+
+
+## Real external game tests
+
+    python -m unittest discover -s tests -q
+    python -m pytest -q
+    python -m pocketport inspect-source . --out /tmp/source-report.json
+    python -m pocketport port . --out /tmp/selfport-new3ds --target new3ds
+    python -m pocketport verify-port /tmp/selfport-new3ds
+
+The host tests for pocketport.source_port verify source entrypoints,
+build-script and symbol diagnostics, local include graphs, exact
+patch provenance, original source immutability, asset opt-in,
+symlink/oversize rejection, SHA tamper detection, path traversal
+protection, CLI/MCP and compiler execute permission gates.
+
+The CI pins two independent real external upstream revisions:
+The Legend of Edgar GPLv2+ is imported with all 8308 files and tested
+for preservation of gameplay/audio/save modules; historical Abbaye
+GPLv3 Citro3D source plus CC-BY artwork/audio is imported and passed
+to an explicitly authorized real compiler. Build results must be read
+from the *same* workflow run, including status and diagnostic logs.
+A native build is not an emulator test or actual playable-game claim.

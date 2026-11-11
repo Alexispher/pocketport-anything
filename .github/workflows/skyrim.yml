@@ -256,9 +256,10 @@ jobs:
           assert (a/"source/romfs/sounds/AreaIChurchN.wav").is_file()
           assert (a/"source/COPYING").is_file()
           assert m["adapter"]=="abbaye-native-3ds"
-          assert len(m["patches"])==1
-          assert m["patches"][0]["path"]=="src/history.c"
+          assert len(m["patches"])==2
+          assert {p["path"] for p in m["patches"]}=={"src/history.c","src/startscreen.c"}
           assert "aud_StopMusic();" in (a/"source/src/history.c").read_text()
+          assert "aud_StopMusic();" in (a/"source/src/startscreen.c").read_text()
           assert (a/"source/src/history.c").read_bytes() != (Path("external/abbaye")/"src/history.c").read_bytes()
           print("ACTUAL_GPL_GAME_SOURCE_PRESERVED",len(m["files"]))
           PY
