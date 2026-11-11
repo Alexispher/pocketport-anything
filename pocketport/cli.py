@@ -25,6 +25,7 @@ from .skyrim.fixture import generate as generate_fixture
 from .skyrim.texture_gpu import convert_t3x, DDSError as GPUDDSError
 from .planning import choose
 from .source_port import inspect_source, port_project, verify_port
+from .port_build import native_build, package_native
 from .screens import load_profile, assess_profile, write_header
 from .translation import parse, verify_host, write_c
 
@@ -54,6 +55,13 @@ def run(args: argparse.Namespace) -> dict:
                             copy_assets=args.copy_assets)
     if args.cmd == "verify-port":
         return verify_port(Path(args.workspace))
+    if args.cmd == "port-build":
+        return native_build(Path(args.workspace),
+                            execute_trusted_build=args.execute_trusted_build,
+                            timeout=args.timeout)
+    if args.cmd == "port-package":
+        return package_native(Path(args.workspace), Path(args.out),
+                              redistribution_authorized=args.redistribution_authorized)
     if args.cmd == "screen-assess":
         profile = load_profile(Path(args.profile))
         evidence = None
@@ -208,6 +216,16 @@ def parser() -> argparse.ArgumentParser:
                       help="Copy locally licensed game assets under bounded input limits")
     verify_port_cmd = commands.add_parser("verify-port", help="Validate source copy and all adapted file SHA-256 hashes")
     verify_port_cmd.add_argument("workspace")
+    port_build_cmd = commands.add_parser("port-build", help="Explicitly run trusted imported native 3DS Makefile")
+    port_build_cmd.add_argument("workspace")
+    port_build_cmd.add_argument("--execute-trusted-build", action="store_true",
+                                help="Authorize execution of imported game Makefile")
+    port_build_cmd.add_argument("--timeout", type=int, default=300)
+    port_pkg = commands.add_parser("port-package", help="Bundle valid native 3DSX plus complete corresponding source")
+    port_pkg.add_argument("workspace")
+    port_pkg.add_argument("--out", required=True)
+    port_pkg.add_argument("--redistribution-authorized", action="store_true",
+                          help="Confirm all asset, sound, code redistribution rights before packaging")
     screens = commands.add_parser("screen-assess", help="Assess a validated 3DS dual-screen/input profile")
     screens.add_argument("profile")
     screens.add_argument("--evidence", help="Optional independently verified evidence flags JSON")
