@@ -26,7 +26,7 @@ Native Star Catcher now draws **upper gameplay** and an independent
 HUD/MAP/BAG, PAUSE/HELP footer and a physical-only navigation path.
 B restarts gameplay, START exits, X pauses, Y opens HELP, L/R cycles
 views; Circle Pad/D-pad still move. Bottom touchscreen presses are
-debounced on edge, and gameplay ticks stop when menus are open.
+debounced on edge; MAP/BAG retain live updates while PAUSE/HELP freeze ticking.
 
 The validated profile examples/source-port/display-profile.json drives
 the start page, page mask and touch enablement. Run:

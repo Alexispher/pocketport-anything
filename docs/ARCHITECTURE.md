@@ -49,7 +49,7 @@ Native Star Catcher now links a **portable** runtime/ui/pp_ui core
 with the 3DS-specific runtime/platform/pp_display_3ds backend.
 The core accepts normalized button/touch snapshots, handles UI
 state (HUD/MAP/INVENTORY/HELP/PAUSE/ERROR), enforces hitbox boundaries,
-suppresses gameplay while menus are active and exposes bounded local
+suppresses controls on MAP/BAG, while PAUSE/HELP suspend gameplay ticking and exposes bounded local
 gameplay notifications.
 
 The backend owns distinct Citro2D top/bottom render targets, allocates a

@@ -82,7 +82,7 @@ Investigate the game before choosing an approach. Answer with the selected evide
 2. Inspect source game viewports and input interactions; determine top/bottom roles independently. Do not interpret rotated GPU storage as touch coordinates.
 3. Run python -m pocketport screen-assess examples/source-port/display-profile.json. Validate schema v1, missing app memory evidence and touch/physical fallbacks.
 4. Reuse runtime/ui/pp_ui.h for platform-independent menus, input priority and touch press/hold/release logic. Reuse runtime/platform/pp_display_3ds.h for target ownership, one Citro3D frame and two Citro2D scenes.
-5. Keep original source game's top rendering and gameplay core intact. Game updates must be suppressed by UIResult when menus are open, without losing existing physical controls.
+5. Keep original source game's top rendering and gameplay core intact. Simulation continues on MAP/BAG without gameplay control input; PAUSE/HELP must suspend ticking, without losing existing physical controls.
 6. Use the original Star Catcher source-port as the regression demo. The Skyrim 3D viewer remains a separate supported example.
 7. Cross-compile Star Catcher and Skyrim with devkitARM; record SHA. Test both screens, touch and buttons in Azahar; do not claim that CI compilation proves displayed graphics.
 8. Diagnose with docs/AGENT_DEBUGGING.md and document evidence separately (HOST_TESTED vs CROSS_COMPILED vs EMULATOR_BOOTED vs HARDWARE_VALIDATED).
