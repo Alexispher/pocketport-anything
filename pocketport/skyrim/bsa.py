@@ -155,7 +155,6 @@ class BSAArchive:
         decoder = zlib.decompressobj()
         try:
             decoded = decoder.decompress(payload[4:], expected + 1)
-            decoded += decoder.flush()
         except zlib.error as exc:
             raise BSAError("Invalid zlib member") from exc
         if (not decoder.eof or decoder.unused_data or len(decoded) != expected

@@ -161,6 +161,33 @@ class SkyrimParserTests(unittest.TestCase):
         with self.assertRaises(DDSError):
             decode_dxt1(bytes(data))
 
+    def test_bsa_compression_budget_and_corruption(self):
+        with tempfile.TemporaryDirectory() as d:
+            p = Path(d) / "test.bsa"
+            p.write_bytes(bsa_data(b"x" * 300, True))
+            with self.assertRaises(BSAError):
+                BSAArchive(p).read_member("meshes/test.nif", max_bytes=128)
+            data = bytearray(bsa_data(b"ok" * 10, True))
+            data[-1] ^= 0xff
+            p.write_bytes(data)
+            with self.assertRaises(BSAError):
+                BSAArchive(p).read_member("meshes/test.nif")
+
+    def test_compressed_tes5_static_record(self):
+        with tempfile.TemporaryDirectory() as d:
+            p = Path(d) / "compressed.esm"
+            fields = sub(b"MODL", b"meshes/test.nif\0")
+            encoded = struct.pack("<I", len(fields)) + zlib.compress(fields)
+            p.write_bytes(rec(b"TES4", 0, b"") +
+                          rec(b"STAT", 0x110, encoded, flags=0x00040000))
+            self.assertIn(0x110, scan_plugin(p).statics)
+
+    def test_scene_origin_rejects_nan(self):
+        data = bytearray(struct.pack("<4sHHIfff", b"PPSC", 1, 0, 1,
+                                     float("nan"), 0.0, 0.0) + bytes(40))
+        with self.assertRaises(SceneError):
+            read_scene(bytes(data))
+
     @unittest.skipUnless(shutil.which("gcc") or shutil.which("cc"),
                          "Host native C compiler unavailable")
     def test_host_compiles_and_loads_python_scene(self):

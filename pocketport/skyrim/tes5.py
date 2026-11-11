@@ -79,7 +79,6 @@ def _inflate(payload: bytes) -> bytes:
     try:
         decoder = zlib.decompressobj()
         data = decoder.decompress(payload[4:], expected + 1)
-        data += decoder.flush()
     except zlib.error as exc:
         raise TES5Error("Invalid compressed TES5 record") from exc
     if not decoder.eof or decoder.unused_data or len(data) != expected:

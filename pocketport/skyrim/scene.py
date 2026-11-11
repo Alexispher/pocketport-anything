@@ -45,6 +45,8 @@ def read_scene(data: bytes) -> dict:
     magic,version,flags,count,ox,oy,oz=_HEADER.unpack_from(data)
     if magic!=b"PPSC" or version!=1 or flags!=0 or not 1<=count<=MAX_INSTANCES:
         raise SceneError("Unsupported or malformed PPSC header")
+    if not all(math.isfinite(v) for v in (ox,oy,oz)):
+        raise SceneError("Non-finite scene origin")
     if len(data)!=_HEADER.size+count*_ROW.size:
         raise SceneError("Incorrect scene payload length")
     rows=[]
