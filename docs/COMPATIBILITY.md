@@ -7,10 +7,46 @@
 | Translator | PocketPort IR v1 uint32 add/sub/mul/const/ret => C99 and host verification | ARM64/MIPS/x86 lifting, indirect jumps, ABI, pointers, file/syscalls, full LLVM IR |
 | Portable C runtime | Budget accounting, deterministic input map, safe relative resource paths | GPU allocation/VRAM, NDSP backend, save journal system |
 | Gameplay example | Original Star Catcher host logic, reproducible scoring | Commercial game support, original copyrighted game assets |
-| Native application source | libctru/citro2d rendering/input, RomFS read, cleanup | Verified `.3dsx` until toolchain run; hardware evidence |
+| Native application source | libctru/Citro2D with two independent targets, original Star Catcher gameplay and bottom HUD; separate Citro3D Skyrim viewer | Source and real .3dsx CROSS_COMPILED; Azahar same-build dual-screen visuals not verified |
 | Asset optimizer | Pillow-supported bitmap formats + optional tex3ds `.t3x` | Proprietary texture/mesh containers, Blender/glTF formats, audio conversion |
 | Host build | GCC/Clang executable of game core | 3DS platform launch, 3DS frame rate |
-| 3DS build | devkitARM Makefile and real invocation if installed | Fallback compiler pretending to produce `.3dsx` |
+| 3DS build | Real devkitARM, Picasso and 3dsxtool builds in GitHub Actions for Star Catcher and Skyrim | .3dsx compilation is not a gameplay/physical-console test |
 | Emulator/hardware | Instructions and evidence levels | Automated emulator/hardware harness (not present) |
 
 Source research should consult [3DS examples](https://github.com/devkitPro/3ds-examples), [N64Recomp](https://github.com/N64Recomp/N64Recomp), and [REA](https://github.com/morluto/rea). This table is intended to shrink when verifiable new runtime code is implemented, not to be bypassed with a README claim.
+
+
+## Current-screen capability addendum
+
+**Implemented source:** portable C menu/touch state machine, top/bottom
+native Citro2D framebuffer ownership, original Star Catcher top gameplay
+with bottom graphical HUD/MAP/BAG/HELP/PAUSE, generated JSON v1 display
+profile and Python/MCP assessment. See docs/DUAL_SCREEN.md.
+
+**Host tested:** finite control and touch hitbox behavior, pause/resume
+transitions, profile validation, fallback constraints and original
+gameplay regression. **Native build:** requires a verified CI .3dsx
+for the exact head commit. **Not verified here:** actual two-screen
+Azahar pixels, touch navigation or physical-device performance.
+
+**Still unsupported:** arbitrary ARM64-to-ARM11 recompilation, stereo
+rendering in this UI example, arbitrary game engine UI adaptation,
+New 3DS exclusive control requirements, full commercial Skyrim gameplay
+and automatic input rebinding from every profile JSON field.
+
+The older v0.2 table above remains historical; newer native code exists.
+
+
+## Real source-project import capability
+
+| Operation | Implemented boundary | Not yet implemented |
+| --- | --- | --- |
+| inspect-source | Bounded C/C++ filesystem scan; source/build scripts, candidate entry points, symbol/file findings, local includes | Full C/C++ AST, dynamic dependency resolution, certainty about unbuilt binaries |
+| port | Isolated source/asset copy, file SHA-256, explicit reviewed targeted source patches | Automatic arbitrary engine conversion |
+| verify-port | Hashes every imported/adapted file, detects modifications/missing outputs | Proof of original gameplay correctness |
+| port-build | Explicitly trusted native Makefile, genuine devkitARM tools, real diagnostics, newly created 3DSX magic/hash | Automatic cross-platform Make/CMake rewrites or SDL2-mixer/TTF port |
+| port-package | Explicit licensing opt-in, complete corresponding source and verified native binary | Redistribution of unlicensed proprietary content |
+| Real game audit | The Legend of Edgar original GPL C source with audio/enemies/saves, and existing GPLv3 Abbaye Citro3D source | Newly authored full AAA game port or observed same-build gameplay |
+
+Read docs/SOURCE_PORTING.md. Cross-compilation and full gameplay
+are intentionally separate release gates.

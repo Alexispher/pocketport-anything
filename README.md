@@ -49,7 +49,7 @@ The focus is ambitious: **large, complex 3D games and their engines**. Small ori
 | PocketPort IR → C99 | **Implemented, limited** | Defined uint32 IR subset; **not** arbitrary machine code |
 | IR interpreter and equivalence checks | **Implemented** | Host-side comparison against compiled generated C |
 | Original C game runtime | **Implemented** | Star Catcher gameplay core and deterministic host tests |
-| Native 3DS example sources | **Implemented as source** | libctru/citro2d template; build needs devkitPro |
+| Native 3DS examples | **CROSS_COMPILED (specific apps)** | Genuine devkitARM builds of Star Catcher (dual-screen) and limited Skyrim 3D viewer; same-build dual-screen pixels unverified |
 | Asset image preparation | **Implemented** | Pillow-based resizing/padding; optional `tex3ds` integration |
 | Automated host tests | **Implemented** | Python and native C regression coverage |
 | Engine fingerprinting across AAA games | **Experimental** | Bounded family/header candidates; not full game verification |
@@ -671,3 +671,56 @@ the existing PPSC static-reference markers.
 TES5 static placement resolution with BSA model extraction and bounded
 BSTriShape conversion. This produces one mesh, scene placement markers
 and provenance/hash metadata; it does not reconstruct entire game cells.
+
+
+## Dual-screen native platform foundation
+
+The original Star Catcher now has a portable C UI state machine and native
+**two-screen** Citro2D adapter. The TOP 400x240 display retains gameplay;
+the BOTTOM 320x240 touchscreen has graphical HUD/MAP/BAG/PAUSE/HELP views,
+single-press touch activation, physical-control alternatives and explicit
+pause/resume behavior. Screen roles and touch policy are declared in a
+strict versioned JSON profile used during native builds. The game remains
+the original Star Catcher; it does not imply any commercial-game port.
+
+    python -m pocketport screen-assess examples/source-port/display-profile.json
+    python -m pocketport screen-header examples/source-port/display-profile.json --out /tmp/pp_display_profile_generated.h
+    make -C examples/source-port
+
+Implementation: runtime/ui/pp_ui.h and runtime/platform/pp_display_3ds.h;
+integration: examples/source-port/source/main.c. See docs/DUAL_SCREEN.md
+for controls, constraints, tests and evidence. The existing Skyrim 3D viewer,
+NUP, PPIR, AAA research and conversion pipelines remain preserved.
+
+The dual-screen backend has native source and CI cross-compilation; emulator
+framebuffer, touchscreen and console hardware behavior require independent
+observation. Layout JSON is *not* proof of binary, engine or gameplay
+compatibility. Six UI bindings (pause/help/back/next/previous/confirm) now remap the
+native portable UI; game movement and START exit remain game-specific.
+
+
+## Real external game-source engineering pipeline
+
+PocketPort now implements a bounded C/C++ **source project inspector**,
+actionable file/symbol diagnostics, a non-destructive isolated
+source-port workspace, SHA-256 integrity verification, reviewed adapters,
+a trusted native devkitARM Makefile build gate and a corresponding-source
+release packager. These operations do not execute unknown source
+automatically or claim arbitrary game compatibility.
+
+    python -m pocketport inspect-source /private/game-source --out /tmp/source-analysis.json
+    python -m pocketport port /private/game-source --target new3ds --out /tmp/private-game-3ds
+    python -m pocketport verify-port /tmp/private-game-3ds
+
+For a complete, reviewed existing native Makefile, use
+port-build --execute-trusted-build. To package the resulting valid
+.3dsx plus legally distributable corresponding source, use
+port-package --redistribution-authorized. Read docs/SOURCE_PORTING.md
+for exact commands, safety gates, game-source provenance and blocker
+analysis. Imports are not mislabeled as PLAYABLE ports.
+
+Pinned CI has exercised actual source from The Legend of Edgar (GPLv2+):
+real title/game states, enemies, maps, audio, save code and assets.
+A separate build investigation uses the original GPLv3 Citro3D port
+of L'Abbaye des Morts, preserving native game logic and RomFS resources.
+Neither upstream codebase is copied into the MIT repository.
