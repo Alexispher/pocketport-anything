@@ -6,6 +6,7 @@ import sys
 from pathlib import Path
 from .aaa import compatibility, detect_engine, inspect_executable, research_game
 from .nup import inspect_nup
+from .screens import load_profile, assess_profile
 
 TOOLS = {
     "detect_engine": {"path": {"type": "string"}},
@@ -13,6 +14,7 @@ TOOLS = {
     "inspect_nup": {"path": {"type": "string"}},
     "compatibility": {"path": {"type": "string"}},
     "research": {"game": {"type": "string"}},
+    "display_assessment": {"path": {"type": "string"}},
 }
 
 def safe_path(workspace: Path, supplied: str) -> Path:
@@ -60,6 +62,8 @@ def handle(message: dict, workspace: Path) -> dict | None:
             raise ValueError("Expected exactly the declared input parameters")
         if name == "research":
             data = research_game(args["game"])
+        elif name == "display_assessment":
+            data = assess_profile(load_profile(safe_path(workspace, args["path"])))
         else:
             path = safe_path(workspace, args["path"])
             data = {"detect_engine": detect_engine,
