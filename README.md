@@ -654,3 +654,13 @@ only until cross-built) draws reference **markers**, not Skyrim's actual NIF
 geometry, lighting, or gameplay. No original assets are in git.
 
 For commands and exact boundaries, see [Skyrim Native Initiative](docs/SKYRIM_NATIVE.md).
+
+
+### Static NIF geometry conversion
+
+`pocketport skyrim-convert-nif model.nif --out mesh.ppmg` accepts a limited
+single-BSTriShape NIF 20.2.0.7 subset with bounded indexed geometry. The
+native Citro3D frontend can consume the corresponding PPMG file from SD and
+draw the model with a fixed material; full cell reconstruction, textures,
+collision and original gameplay are not implemented. This is separate from
+the existing PPSC static-reference markers.

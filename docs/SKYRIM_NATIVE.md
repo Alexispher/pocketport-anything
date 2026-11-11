@@ -101,3 +101,25 @@ Skyrim LE and SE share many TES5 plugin records, but **mesh dialects
 and BS stream versions vary**. Until a corresponding NIF reader and
 verified scene fixture are available, a successfully read BSA is not
 evidence that an SE world renders.
+
+
+## Static BSTriShape NIF geometry (new experiment)
+
+`python -m pocketport skyrim-convert-nif /private/meshes/fixture.nif --out /private/output/mesh.ppmg`
+converts one strictly bounded NIF 20.2.0.7 BSTriShape, Bethesda stream 100 or
+130, to PPMG v1 vertex/index geometry (XYZ, normals, UV). The reader enforces
+finite transforms, index bounds and a single shape. Skinning, compound
+shapes, materials, dynamic shapes and full NIF scene graphs are **unsupported**;
+unsupported formats fail closed rather than fabricate triangles.
+
+`python -m pocketport skyrim-validate-mesh /private/output/mesh.ppmg`
+checks the serialized geometry. The Citro3D viewer can load this model from
+`sdmc:/3ds/pocketport/skyrim/mesh.ppmg`, decompress its index data on the
+CPU into triangle vertices and draw it with a fixed shader. Models are shown
+**without original Skyrim materials/textures**, and the mesh is not yet placed
+at the associated TES5 REFR transform or combined with a cell scene. Camera
+D-pad controls are maintained. The project does not claim playable Skyrim.
+
+The existing PPSC static markers remain as a fallback. Real Skyrim-derived
+mesh rendering is only verifiable after authorized NIF conversion and
+successful hardware/emulator launch.

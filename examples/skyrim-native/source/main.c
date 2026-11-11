@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "../../../runtime/skyrim/pp_scene.h"
+#include "../../../runtime/skyrim/pp_mesh.h"
 
 extern const unsigned char pp_vshader[];
 extern const uint32_t pp_vshader_size;
@@ -19,8 +20,12 @@ extern const uint32_t pp_vshader_size;
                   GX_TRANSFER_RAW_COPY(0)|GX_TRANSFER_IN_FORMAT(GX_TRANSFER_FMT_RGBA8)| \
                   GX_TRANSFER_OUT_FORMAT(GX_TRANSFER_FMT_RGB8)|GX_TRANSFER_SCALING(GX_TRANSFER_SCALE_NO))
 #define MAX_MARKERS 128u
+#define MAX_DRAW_TRIANGLES 1024u
 typedef struct {float x,y,z;} Vertex;
 static PPScene scene;
+static PPMesh *model;
+static bool has_scene=false;
+static bool has_model=false;
 static Vertex *vertices;
 static DVLB_s *dvlb;
 static shaderProgram_s shader;
@@ -35,6 +40,7 @@ static void shutdown_scene(void) {
     if (vertices) {linearFree(vertices); vertices=NULL;}
     if (initialized_program) {shaderProgramFree(&shader); initialized_program=0;}
     if (dvlb) {DVLB_Free(dvlb); dvlb=NULL;}
+    if (model) {free(model); model=NULL;}
     C3D_Fini();
     gfxExit();
 }
@@ -45,6 +51,17 @@ static bool load_scene(void) {
     int ok=pp_scene_read(f,&scene);
     fclose(f);
     return ok!=0;
+}
+
+static bool load_mesh(void) {
+    FILE *f=fopen("sdmc:/3ds/pocketport/skyrim/mesh.ppmg","rb");
+    if(!f) return false;
+    model=(PPMesh*)malloc(sizeof(PPMesh));
+    if(!model){fclose(f);return false;}
+    int valid=pp_mesh_read(f,model);
+    fclose(f);
+    if(!valid){free(model);model=NULL;return false;}
+    return true;
 }
 
 static bool begin_scene(void) {
@@ -66,7 +83,7 @@ static bool begin_scene(void) {
     AttrInfo_AddLoader(attr,0,GPU_FLOAT,3);
     C3D_BufInfo *buffer=C3D_GetBufInfo();
     BufInfo_Init(buffer);
-    vertices=(Vertex*)linearAlloc(MAX_MARKERS*3*sizeof(Vertex));
+    vertices=(Vertex*)linearAlloc(MAX_DRAW_TRIANGLES*3*sizeof(Vertex));
     if (!vertices) return false;
     BufInfo_Add(buffer,vertices,sizeof(Vertex),1,0x0);
     C3D_TexEnv *env=C3D_GetTexEnv(0);
@@ -75,6 +92,20 @@ static bool begin_scene(void) {
     C3D_TexEnvFunc(env,C3D_Both,GPU_REPLACE);
     C3D_FixedAttribSet(1,1.0f,1.0f,1.0f,1.0f);
     return true;
+}
+static void redraw_mesh(void) {
+    drawn=model->triangle_count<MAX_DRAW_TRIANGLES?
+          model->triangle_count:MAX_DRAW_TRIANGLES;
+    for(u32 i=0;i<drawn;i++) {
+        for(u32 j=0;j<3;j++) {
+            const PPMeshVertex *v=&model->vertices[model->triangles[i].v[j]];
+            vertices[i*3+j]=(Vertex){
+                v->xyz[0]*0.01f-camera_x*0.01f,
+                v->xyz[1]*0.01f-camera_y*0.01f,
+                -4.0f-v->xyz[2]*0.01f+camera_z*0.01f};
+        }
+    }
+    GSPGPU_FlushDataCache(vertices,drawn*3*sizeof(Vertex));
 }
 static void redraw_markers(void) {
     drawn=scene.count<MAX_MARKERS?scene.count:MAX_MARKERS;
@@ -95,11 +126,12 @@ static void redraw_markers(void) {
 int main(void) {
     gfxInitDefault();
     consoleInit(GFX_BOTTOM,NULL);
-    printf("PocketPort Skyrim 2011\n");
-    printf("Static placements diagnostic\n");
-    printf("No NIF mesh support yet\n");
-    if (!load_scene()) {
-        printf("Missing/invalid scene.ppsc\n");
+    printf("PocketPort Skyrim model viewer\n");
+    printf("BSTriShape and placement diagnostics\n");
+    has_scene=load_scene();
+    has_model=load_mesh();
+    if (!has_scene && !has_model) {
+        printf("Missing scene.ppsc and mesh.ppmg\n");
         printf("Use converter on PC; put file at\n");
         printf("/3ds/pocketport/skyrim/\n");
         printf("START to exit\n");
@@ -112,6 +144,8 @@ int main(void) {
         return 1;
     }
     printf("Validated references: %lu\n",(unsigned long)scene.count);
+    if(has_model)printf("Actual mesh triangles: %lu\n",(unsigned long)model->triangle_count);
+    if(!has_model)printf("Showing PPSC markers only\n");
     if(!begin_scene()){
         printf("Citro3D initialization failed\n");
         shutdown_scene();
@@ -136,7 +170,7 @@ int main(void) {
             int idx=pp_scene_nearest(&scene,camera_x,camera_y,camera_z,500.0f);
             printf("Nearest reference index: %d\n",idx);
         }
-        redraw_markers();
+        if(has_model)redraw_mesh(); else redraw_markers();
         C3D_FrameBegin(C3D_FRAME_SYNCDRAW);
         C3D_RenderTargetClear(target,C3D_CLEAR_ALL,CLEAR_COLOR,0);
         C3D_FrameDrawOn(target);

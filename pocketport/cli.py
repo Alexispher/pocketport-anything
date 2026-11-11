@@ -19,6 +19,7 @@ from .skyrim.bsa import inspect_bsa, BSAError
 from .skyrim.tes5 import inspect_plugin, TES5Error
 from .skyrim.dds import convert_dds, DDSError
 from .skyrim.scene import convert_plugin, read_scene, SceneError
+from .skyrim.nif import convert_nif, decode_mesh, NIFError
 from .planning import choose
 from .translation import parse, verify_host, write_c
 
@@ -63,6 +64,15 @@ def run(args: argparse.Namespace) -> dict:
     if args.cmd == "skyrim-convert-scene":
         return convert_plugin(Path(args.file), Path(args.out),
                               cell_id=(int(args.cell_id, 0) if args.cell_id else None))
+    if args.cmd == "skyrim-convert-nif":
+        return convert_nif(Path(args.file), Path(args.out))
+    if args.cmd == "skyrim-validate-mesh":
+        p = Path(args.file)
+        if p.is_symlink() or not p.is_file() or p.stat().st_size > 300000:
+            raise NIFError("Invalid or oversized PPMG mesh")
+        mesh = decode_mesh(p.read_bytes())
+        return {"status":"valid","vertices":len(mesh.vertices),
+                "triangles":len(mesh.triangles)}
     if args.cmd == "skyrim-validate-scene":
         path = Path(args.file)
         if path.is_symlink() or path.stat().st_size > 50000:
@@ -173,6 +183,11 @@ def parser() -> argparse.ArgumentParser:
     sk_scene.add_argument("file")
     sk_scene.add_argument("--out", required=True)
     sk_scene.add_argument("--cell-id", help="Cell FormID decimal or 0x hexadecimal")
+    sk_nif = commands.add_parser("skyrim-convert-nif", help="Convert limited static BSTriShape NIF to PPMG")
+    sk_nif.add_argument("file")
+    sk_nif.add_argument("--out", required=True)
+    sk_mesh = commands.add_parser("skyrim-validate-mesh", help="Validate a PPMG v1 geometry package")
+    sk_mesh.add_argument("file")
     sk_verify = commands.add_parser("skyrim-validate-scene", help="Validate PPSC scene package without execution")
     sk_verify.add_argument("file")
     hashcmd = commands.add_parser("hash", help="SHA-256 hash an existing file")
