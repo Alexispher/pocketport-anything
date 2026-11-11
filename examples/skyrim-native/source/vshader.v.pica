@@ -4,6 +4,7 @@
 .alias pos v0
 .out outpos position
 .out outclr color
+.alias vertexColor v2
 .out outtc0 texcoord0
 .alias intex v1
 .proc main
@@ -14,6 +15,6 @@
     dp4 outpos.z, projection[2], r0
     dp4 outpos.w, projection[3], r0
     mov outtc0, intex
-    mov outclr, one.yyyy
+    mov outclr, vertexColor
     end
 .end

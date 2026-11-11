@@ -82,6 +82,55 @@ jobs:
           tex3ds -f rgba8 -o /tmp/pocketport-test.t3x /tmp/pocketport-test.png
           test -s /tmp/pocketport-test.t3x
           sha256sum /tmp/pocketport-test.t3x
+      - name: Generate original SD scene and validate formats
+        shell: bash
+        run: |
+          set -euxo pipefail
+          export PATH="$DEVKITARM/bin:$DEVKITPRO/tools/bin:$PATH"
+          PYTHONPATH=. python3 -m pocketport.skyrim.fixture --output /tmp/pocketport-release
+          test -s /tmp/pocketport-release/3ds/pocketport/skyrim/scene.ppsc
+          test -s /tmp/pocketport-release/3ds/pocketport/skyrim/mesh.ppmg
+          PYTHONPATH=. python3 - <<'PY'
+          from pathlib import Path
+          from pocketport.skyrim.scene import read_scene
+          from pocketport.skyrim.nif import decode_mesh
+          d=Path("/tmp/pocketport-release/3ds/pocketport/skyrim")
+          assert read_scene((d/"scene.ppsc").read_bytes())["count"] == 3
+          assert len(decode_mesh((d/"mesh.ppmg").read_bytes()).triangles) > 12
+          PY
+      - name: Package authentic .3dsx and ready-to-copy SD scene
+        shell: bash
+        run: |
+          set -euxo pipefail
+          mkdir -p /tmp/pocketport-release
+          cp examples/skyrim-native/pocketport-skyrim.3dsx /tmp/pocketport-release/
+          cat > /tmp/pocketport-release/README.txt <<'EOF'
+          PocketPort Skyrim - Original 3D test scene
+          ==========================================
+          1. Launch pocketport-skyrim.3dsx with Azahar 2126.2.
+          2. The EXE contains a compiled original 3D scene and does not need Skyrim files.
+          3. Optional: copy the supplied 3ds/ folder to the root of Azahar's emulated
+             SD card (sdmc), preserving 3ds/pocketport/skyrim/scene.ppsc and mesh.ppmg.
+          4. Use Circle Pad or D-pad to pan, START to exit.
+          5. Real licensed Skyrim LE/SE files are NOT shipped in this package.
+          Passing CI proves cross-compilation, not actual Azahar framebuffer rendering.
+          EOF
+          python3 - <<'PY'
+          from pathlib import Path
+          import zipfile
+          src=Path("/tmp/pocketport-release")
+          with zipfile.ZipFile("pocketport-skyrim-azahar-test.zip","w",zipfile.ZIP_DEFLATED) as archive:
+              for p in sorted(src.rglob("*")):
+                  if p.is_file():
+                      archive.write(p,p.relative_to(src).as_posix())
+          PY
+          test -s pocketport-skyrim-azahar-test.zip
+      - name: Upload complete Azahar test kit
+        uses: actions/upload-artifact@v4
+        with:
+          name: pocketport-skyrim-azahar-test-kit
+          path: pocketport-skyrim-azahar-test.zip
+          if-no-files-found: error
       - name: Upload authentic native binary
         uses: actions/upload-artifact@v4
         with:

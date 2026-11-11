@@ -131,6 +131,10 @@ def convert_game(game_dir: str | Path, output: str | Path, *,
         raise ConversionError("Concurrent writer created content in output directory")
     (destination / "scene.ppsc").write_bytes(scene_bytes)
     (destination / "mesh.ppmg").write_bytes(mesh_bytes)
+    sd=destination/"3ds"/"pocketport"/"skyrim"
+    sd.mkdir(parents=True,exist_ok=False)
+    (sd/"scene.ppsc").write_bytes(scene_bytes)
+    (sd/"mesh.ppmg").write_bytes(mesh_bytes)
     info = {
         "schema_version": 1, "edition": "Skyrim Special Edition" if edition_version==105 else "Skyrim 2011",
         "archive_version": edition_version, "source": str(data),
@@ -145,7 +149,8 @@ def convert_game(game_dir: str | Path, output: str | Path, *,
         "not_supported": ["other NIF shapes", "materials", "texture uploads", "collision",
                           "Papyrus", "quests", "full worldspace", "gameplay"],
         "warnings": errors[:8],
-        "runtime": "Copy mesh.ppmg and scene.ppsc to SD:/3ds/pocketport/skyrim/"
+        "runtime": "Copy output/3ds to Azahar emulated SD root (sdmc/)",
+        "sd_root": str(destination/"3ds")
     }
     (destination / "manifest.json").write_text(
         json.dumps(info, indent=2, sort_keys=True) + "\n", encoding="utf-8")

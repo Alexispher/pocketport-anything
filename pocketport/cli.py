@@ -21,6 +21,7 @@ from .skyrim.dds import convert_dds, DDSError
 from .skyrim.scene import convert_plugin, read_scene, SceneError
 from .skyrim.nif import convert_nif, decode_mesh, NIFError
 from .skyrim.converter import convert_game, ConversionError
+from .skyrim.fixture import generate as generate_fixture
 from .skyrim.texture_gpu import convert_t3x, DDSError as GPUDDSError
 from .planning import choose
 from .translation import parse, verify_host, write_c
@@ -67,6 +68,8 @@ def run(args: argparse.Namespace) -> dict:
         return convert_plugin(Path(args.file), Path(args.out),
                               cell_id=(int(args.cell_id, 0) if args.cell_id else None))
     if args.cmd == "skyrim":
+        if args.skyrim_cmd == "test-scene":
+            return generate_fixture(Path(args.output))
         if args.skyrim_cmd == "convert":
             return convert_game(Path(args.game_dir), Path(args.output),
                                 cell_id=int(args.cell, 0),
@@ -196,6 +199,8 @@ def parser() -> argparse.ArgumentParser:
     sk_scene.add_argument("--cell-id", help="Cell FormID decimal or 0x hexadecimal")
     skyrim = commands.add_parser("skyrim", help="Skyrim LE/SE local conversion pipeline")
     sk_cmd = skyrim.add_subparsers(dest="skyrim_cmd", required=True)
+    sk_fixture = sk_cmd.add_parser("test-scene", help="Original reproducible 3D test scene and SD-card folder")
+    sk_fixture.add_argument("--output",required=True)
     sk_convert = sk_cmd.add_parser("convert", help="Convert one authentic cell and static NIF from local Skyrim files")
     sk_convert.add_argument("--game-dir", required=True)
     sk_convert.add_argument("--cell", required=True, help="TES5 cell FormID (decimal or 0xhex)")

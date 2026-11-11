@@ -161,3 +161,40 @@ the viewer imports it using Tex3DS and maps the NIF UVs onto
 the selected triangle mesh. This is a **single selected texture** and
 not automatic Skyrim material resolution. Emulator/hardware display
 must still be validated.
+
+
+## Missing scene/mesh issue — reproducible fixture
+
+This release supports two separate paths:
+
+1. **No Skyrim installed:** `python -m pocketport skyrim test-scene --output build/skyrim-demo`
+   produces `build/skyrim-demo/3ds/pocketport/skyrim/{scene.ppsc,mesh.ppmg}`.
+   These original geometry files contain a floor and three solid blocks.
+   The Makefile compiles the same fixture geometry **into the .3dsx** as a
+   fallback, so even an empty SD-card directory no longer ends at a missing
+   files screen. This proves the renderer draw path, **not** Skyrim gameplay.
+2. **Authorized Skyrim LE/SE:** `python -m pocketport skyrim convert --game-dir
+   "/private/Skyrim Special Edition" --cell 0xYOURCELL --target new3ds
+   --output build/skyrim3ds`. It preserves the existing root PPSC/PPMG
+   outputs and now also writes a ready-to-copy
+   `build/skyrim3ds/3ds/pocketport/skyrim` folder.
+   Replace 0xYOURCELL with a real cell FormID from your own installation.
+   This supports only a single static BSTriShape mesh and the reference
+   placements; it does not create a full playable Skyrim cell.
+
+### Azahar 2126.2 on Windows
+
+Azahar's emulated SD root is the `sdmc` directory in its user folder.
+On typical Windows installations, the user data folder is under
+`%APPDATA%/Azahar`. If running with portable user data, use Azahar's
+chosen `user` folder instead. Copy the **contents** of the generated
+`3ds` directory into `sdmc/3ds/`.
+
+Run `pocketport-skyrim.3dsx` in Azahar. When the two asset files are
+not present, the console prints **PocketPort - Built-in 3D Test Scene**
+and the top screen is scheduled to draw triangles from the compiled
+fixture. Circle Pad and D-pad move the camera, START exits.
+
+The user has reported Azahar 2126.2 **booting the earlier app** and
+showing a missing-assets screen. This is not evidence that this new
+3D fallback has been rendered until a fresh emulator launch confirms it.
