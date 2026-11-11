@@ -4,6 +4,7 @@ on:
     branches:
       - feature/skyrim-native-runtime
       - feature/antigravity-skyrim-rendering
+      - feature/universal-3ds-dual-screen-skill
   pull_request:
 jobs:
   skyrim-host:
@@ -21,6 +22,11 @@ jobs:
         run: python -m unittest discover -s tests -v
       - name: All Pytest regressions
         run: python -m pytest -q
+      - name: Original dual-screen profile CLI checks
+        run: |
+          python -m pocketport screen-assess examples/source-port/display-profile.json
+          python -m pocketport screen-header examples/source-port/display-profile.json --out /tmp/pp_screen_profile.h
+          grep PP_PROFILE_ENABLED_PAGES /tmp/pp_screen_profile.h
       - name: Preserve existing PPIR compilation
         run: python -m pocketport verify-ir examples/translation-demo/score.ppir
       - name: Preserve existing original game gameplay regressions
@@ -131,6 +137,20 @@ jobs:
         with:
           name: pocketport-skyrim-azahar-test-kit
           path: pocketport-skyrim-azahar-test.zip
+          if-no-files-found: error
+      - name: Cross-compile original dual-screen Star Catcher
+        shell: bash
+        run: |
+          set -euxo pipefail
+          export PATH="$DEVKITARM/bin:$DEVKITPRO/tools/bin:$PATH"
+          make -C examples/source-port
+          test -s examples/source-port/star-catcher.3dsx
+          sha256sum examples/source-port/star-catcher.3dsx
+      - name: Upload original dual-screen 3DSX
+        uses: actions/upload-artifact@v4
+        with:
+          name: pocketport-star-catcher-dual-screen-3dsx
+          path: examples/source-port/star-catcher.3dsx
           if-no-files-found: error
       - name: Upload authentic native binary
         uses: actions/upload-artifact@v4
