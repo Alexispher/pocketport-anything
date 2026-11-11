@@ -273,14 +273,20 @@ static void redraw_mesh(void) {
         for (u32 j = 0; j < 3; j++) {
             const PPMeshVertex *v = &model->vertices[model->triangles[i].v[j]];
             float cr, cg, cb;
-            if (built_in) {
+            if (built_in || model->triangle_count <= 38) {
                 float n[3] = { v->normal[0], v->normal[1], v->normal[2] };
                 object_color(n, (int)i, &cr, &cg, &cb);
             } else {
-                /* Generic normal-based coloring for Skyrim meshes */
-                cr = 0.50f + fabsf(v->normal[0]) * 0.45f;
-                cg = 0.45f + fabsf(v->normal[1]) * 0.45f;
-                cb = 0.55f + fabsf(v->normal[2]) * 0.40f;
+                /* Generic directional lighting for arbitrary meshes */
+                float lx = 0.4f, ly = -0.6f, lz = 0.7f;
+                float dot = v->normal[0]*lx + v->normal[1]*ly + v->normal[2]*lz;
+                float ambient = 0.35f;
+                float diffuse = dot > 0.0f ? dot * 0.65f : 0.0f;
+                float shade = ambient + diffuse;
+                if (shade > 1.0f) shade = 1.0f;
+                cr = (0.50f + fabsf(v->normal[0]) * 0.45f) * shade;
+                cg = (0.45f + fabsf(v->normal[1]) * 0.45f) * shade;
+                cb = (0.55f + fabsf(v->normal[2]) * 0.40f) * shade;
             }
             /* Write world-space position; MVP transform happens on GPU */
             vertices[i*3+j] = (Vertex){
@@ -312,26 +318,36 @@ static void redraw_markers(void) {
 
 int main(void) {
     gfxInitDefault();
+    consoleDebugInit(debugDevice_SVC);
     consoleInit(GFX_BOTTOM, NULL);
+    fprintf(stderr, "[PocketPort] Skyrim native Citro3D runtime starting\n");
     printf("PocketPort Skyrim model viewer\n");
     printf("BSTriShape and placement diagnostics\n");
 
     has_scene = load_scene();
     has_model = load_mesh();
 
+    fprintf(stderr, "[PocketPort] PPSC: %s, PPMG: %s\n",
+            !scene_found ? "not found" : (scene_invalid ? "invalid" : "valid"),
+            !mesh_found ? "not found" : (mesh_invalid ? "invalid" : "valid"));
     printf("PPSC: %s\n", !scene_found ? "not found" : (scene_invalid ? "invalid" : "valid"));
     printf("PPMG: %s\n", !mesh_found ? "not found" : (mesh_invalid ? "invalid" : "valid"));
 
     if (!has_model) {
         if (!load_builtin_mesh()) {
+            fprintf(stderr, "[PocketPort] FATAL: Out of RAM: builtin scene unavailable\n");
             printf("Out of RAM: builtin scene unavailable\n");
             gfxExit();
             return 2;
         }
+        fprintf(stderr, "[PocketPort] Built-in 3D Test Scene loaded (%u verts, %u tris)\n",
+                (unsigned)model->vertex_count, (unsigned)model->triangle_count);
         printf("PocketPort - Built-in 3D Test Scene\n");
         printf("Original fixture: ground and 3 cubes\n");
     }
     if (has_model) {
+        fprintf(stderr, "[PocketPort] Geometry loaded: %lu vertices, %lu triangles\n",
+                (unsigned long)model->vertex_count, (unsigned long)model->triangle_count);
         printf("Geometry: %lu vertices, %lu triangles\n",
                (unsigned long)model->vertex_count, (unsigned long)model->triangle_count);
     }
@@ -342,10 +358,13 @@ int main(void) {
         printf("Showing PPSC markers only\n");
 
     if (!begin_scene()) {
+        fprintf(stderr, "[PocketPort] FATAL: Citro3D initialization failed\n");
         printf("Citro3D initialization failed\n");
         shutdown_scene();
         return 2;
     }
+    fprintf(stderr, "[PocketPort] Citro3D initialized successfully. Camera: (%.1f, %.1f, %.1f), pitch: %.2f\n",
+            cam_x, cam_y, cam_z, cam_pitch);
 
     printf("Circle Pad: move | D-pad: look\n");
     printf("L/R: up/down | START: exit\n");
@@ -361,8 +380,9 @@ int main(void) {
     /* Disable backface culling so both sides of triangles are visible */
     C3D_CullFace(GPU_CULL_NONE);
 
-    /* Depth test: LEQUAL with depth-clear at max. This is the standard 3DS convention. */
-    C3D_DepthTest(true, GPU_LEQUAL, GPU_WRITE_ALL);
+    /* Depth test: PICA200/citro3d clears depth to 0 (far plane) with Mtx_PerspTilt(false).
+       Incoming closer geometry has higher depth, so GPU_GREATER is required. */
+    C3D_DepthTest(true, GPU_GREATER, GPU_WRITE_ALL);
 
     while (aptMainLoop()) {
         hidScanInput();
