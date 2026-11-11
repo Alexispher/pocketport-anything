@@ -7,6 +7,7 @@ from pathlib import Path
 from .aaa import compatibility, detect_engine, inspect_executable, research_game
 from .nup import inspect_nup
 from .screens import load_profile, assess_profile
+from .source_port import inspect_source
 
 TOOLS = {
     "detect_engine": {"path": {"type": "string"}},
@@ -15,6 +16,7 @@ TOOLS = {
     "compatibility": {"path": {"type": "string"}},
     "research": {"game": {"type": "string"}},
     "display_assessment": {"path": {"type": "string"}},
+    "inspect_source": {"path": {"type": "string"}},
 }
 
 def safe_path(workspace: Path, supplied: str) -> Path:
@@ -64,6 +66,8 @@ def handle(message: dict, workspace: Path) -> dict | None:
             data = research_game(args["game"])
         elif name == "display_assessment":
             data = assess_profile(load_profile(safe_path(workspace, args["path"])))
+        elif name == "inspect_source":
+            data = inspect_source(safe_path(workspace, args["path"]))
         else:
             path = safe_path(workspace, args["path"])
             data = {"detect_engine": detect_engine,

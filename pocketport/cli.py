@@ -24,6 +24,7 @@ from .skyrim.converter import convert_game, ConversionError
 from .skyrim.fixture import generate as generate_fixture
 from .skyrim.texture_gpu import convert_t3x, DDSError as GPUDDSError
 from .planning import choose
+from .source_port import inspect_source, port_project, verify_port
 from .screens import load_profile, assess_profile, write_header
 from .translation import parse, verify_host, write_c
 
@@ -38,6 +39,21 @@ def _project_source(args: argparse.Namespace) -> tuple[Path, dict]:
 def run(args: argparse.Namespace) -> dict:
     if args.cmd == "doctor":
         return doctor()
+    if args.cmd == "inspect-source":
+        data = inspect_source(Path(args.source))
+        if args.out:
+            write_json(Path(args.out), data)
+            return {"report": str(Path(args.out).resolve()),
+                    "source_files": data["files"]["source_files"],
+                    "findings": len(data["findings"]),
+                    "status": data["status"]}
+        return data
+    if args.cmd == "port":
+        return port_project(Path(args.source), Path(args.out),
+                            target=args.target, adapter=args.adapter,
+                            copy_assets=args.copy_assets)
+    if args.cmd == "verify-port":
+        return verify_port(Path(args.workspace))
     if args.cmd == "screen-assess":
         profile = load_profile(Path(args.profile))
         evidence = None
@@ -179,6 +195,19 @@ def parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="pocketport", description="Evidence-first Nintendo 3DS porting framework")
     commands = p.add_subparsers(dest="cmd", required=True)
     commands.add_parser("doctor", help="Discover installed toolchains without changing your system")
+    source = commands.add_parser("inspect-source", help="Bounded static inspection of a real C/C++ game project")
+    source.add_argument("source")
+    source.add_argument("--out", help="Write complete JSON findings to disk, print concise summary")
+    port = commands.add_parser("port", help="Copy authorized game source to an isolated, reviewable 3DS adaptation workspace")
+    port.add_argument("source")
+    port.add_argument("--out", required=True)
+    port.add_argument("--target", choices=("old3ds","new3ds"), default="new3ds")
+    port.add_argument("--adapter", choices=("none","edgar-sdl2"), default="none",
+                      help="Apply only a named, reviewed source change")
+    port.add_argument("--copy-assets", action="store_true",
+                      help="Copy locally licensed game assets under bounded input limits")
+    verify_port_cmd = commands.add_parser("verify-port", help="Validate source copy and all adapted file SHA-256 hashes")
+    verify_port_cmd.add_argument("workspace")
     screens = commands.add_parser("screen-assess", help="Assess a validated 3DS dual-screen/input profile")
     screens.add_argument("profile")
     screens.add_argument("--evidence", help="Optional independently verified evidence flags JSON")

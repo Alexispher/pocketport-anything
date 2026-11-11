@@ -5,6 +5,7 @@ on:
       - feature/skyrim-native-runtime
       - feature/antigravity-skyrim-rendering
       - feature/universal-3ds-dual-screen-skill
+      - feature/full-game-porting-framework
   pull_request:
 jobs:
   skyrim-host:
@@ -27,6 +28,12 @@ jobs:
           python -m pocketport screen-assess examples/source-port/display-profile.json
           python -m pocketport screen-header examples/source-port/display-profile.json --out /tmp/pp_screen_profile.h
           grep PP_PROFILE_ENABLED_PAGES /tmp/pp_screen_profile.h
+      - name: Source-port pipeline CLI smoke test on repository source
+        run: |
+          python -m pocketport inspect-source . --out /tmp/pocketport-own-source.json
+          test -s /tmp/pocketport-own-source.json
+          python -m pocketport port . --out /tmp/pocketport-self-audit --target new3ds
+          python -m pocketport verify-port /tmp/pocketport-self-audit
       - name: Preserve existing PPIR compilation
         run: python -m pocketport verify-ir examples/translation-demo/score.ppir
       - name: Preserve existing original game gameplay regressions
@@ -158,3 +165,52 @@ jobs:
           name: pocketport-skyrim-native-3dsx
           path: examples/skyrim-native/pocketport-skyrim.3dsx
           if-no-files-found: error
+
+  edgar-external-source:
+    name: Real GPL game source import and audited renderer adaptation (no game-port claim)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Obtain original game under its upstream GPL license (not committed)
+        uses: actions/checkout@v4
+        with:
+          repository: riksweeney/edgar
+          ref: 94d76ebe6a1533caefc89d9201ac3fc4ee974703
+          path: external/edgar
+          persist-credentials: false
+      - name: Inspect real C/SDL2 game and generate narrow reviewed adaptation
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python -m pocketport inspect-source external/edgar --out /tmp/edgar-source-report.json
+          python -m pocketport port external/edgar --target new3ds --adapter edgar-sdl2 --copy-assets --out /tmp/edgar-source-3ds
+          python -m pocketport verify-port /tmp/edgar-source-3ds
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib, json
+          source=Path("external/edgar")
+          output=Path("/tmp/edgar-source-3ds")
+          m=json.loads((output/"port.json").read_text())
+          inspect=json.loads((output/"inspection.json").read_text())
+          assert m["schema_version"]==1 and m["adapter"]=="edgar-sdl2"
+          assert m["status"]=="SOURCE_ADAPTED_NOT_NATIVE_COMPILED"
+          assert len(m["files"])>7000
+          assert len(m["patches"])==1
+          assert inspect["files"]["source_files"]>300
+          assert "src/main.c" in inspect["entrypoint_candidates"]
+          for part in ("src/main.c","src/game.c","src/system/load_save.c",
+                       "src/audio/audio.c","src/graphics/graphics.c"):
+              assert (source/part).read_bytes()==(output/"source"/part).read_bytes(),part
+          assert (source/"src/init.c").read_bytes()!=(output/"source/src/init.c").read_bytes()
+          assert b"SDL_RENDERER_SOFTWARE" in (output/"source/src/init.c").read_bytes()
+          assert (output/"source"/"music").is_dir()
+          assert (output/"source"/"data").is_dir()
+          assert (output/"source"/"sound").is_dir()
+          print("REAL_GAME_SOURCE_IMPORTED",len(m["files"]),"files")
+          print("GAMEPLAY_FILES_PRESERVED",5)
+          print("NATIVE_GAME_BUILD_NOT_YET_ATTEMPTED")
+          print("FULL_GAME_PLAYABILITY_NOT_CLAIMED")
+          PY
