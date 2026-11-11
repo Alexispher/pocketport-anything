@@ -99,7 +99,14 @@ def native_build(workspace: str | Path, *, execute_trusted_build: bool = False,
                           "magic": "3DSX", "target": m["target"]})
     status = ("CROSS_COMPILED" if code == 0 and artifacts else
               "BUILD_FAILED" if code else "NO_NEW_NATIVE_3DSX")
+    important = ("error:", "fatal error:", "undefined reference",
+                 "no rule to make target", "not found", "make: ***",
+                 "recipe for target", "failed")
+    diagnostic_lines = [line.strip()[:450] for line in output.splitlines()
+                        if any(token in line.lower() for token in important)]
     result = {"status": status,
+              "compiler_diagnostics": diagnostic_lines[-30:],
+              "log_tail": "\n".join(output.splitlines()[-35:])[-12000:],
               "command": command, "returncode": 0 if status == "CROSS_COMPILED" else (code or 1),
               "elapsed_seconds": elapsed, "log_truncated": truncated,
               "log": str(workspace / "native-build.log"), "artifacts": artifacts,
