@@ -44,9 +44,9 @@ static void bottom_ui(PPDisplay *d,const PPUIState *ui,const PPHUD *hud) {
     if(ui->page==PP_PAGE_HELP || ui->page==PP_PAGE_ERROR) {
         label(d,14,12,0.70f,ui->page==PP_PAGE_HELP?"HELP / CONTROLS":"ERROR",TEXT_COLOR);
         label(d,14,58,0.44f,"D-Pad / Circle Pad: move",MUTED);
-        label(d,14,85,0.44f,"B: restart    X: pause",MUTED);
-        label(d,14,112,0.44f,"L/R: change page",MUTED);
-        label(d,14,139,0.44f,"Y: help  START: exit",MUTED);
+        label(d,14,85,0.44f,"Mapped buttons: back / pause",MUTED);
+        label(d,14,112,0.44f,"Use mapped page cycle buttons",MUTED);
+        label(d,14,139,0.44f,"START exits this demo",MUTED);
         action(d,pp_ui_footer_rect(0),"BACK",1);
         return;
     }
@@ -88,8 +88,8 @@ static void bottom_ui(PPDisplay *d,const PPUIState *ui,const PPHUD *hud) {
         label(d,20,114,0.56f,tmp,MUTED);
         label(d,20,148,0.36f,"Original game, no inventory engine",MUTED);
     }
-    action(d,pp_ui_footer_rect(0),"PAUSE (X)",0);
-    action(d,pp_ui_footer_rect(1),"HELP (Y)",0);
+    action(d,pp_ui_footer_rect(0),"PAUSE",0);
+    action(d,pp_ui_footer_rect(1),"HELP",0);
     if(ui->event_frames && ui->event_text[0]) {
         label(d,20,169,0.36f,ui->event_text,ACCENT);
     }

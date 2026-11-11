@@ -44,10 +44,14 @@ typedef struct {
     int x, y, width, height;
 } PPUIRect;
 typedef struct {
+    uint32_t pause, help, back, next_page, previous_page, confirm;
+} PPUIBindings;
+typedef struct {
     PPUIPage page;
     PPUIPage return_page;
     PPUIPage help_return; /* nested HELP can return to PAUSE */
     unsigned enabled_pages;
+    PPUIBindings bindings;
     unsigned selected;    /* pause selection 0..2 */
     int touch_previous;    /* rising edge => one action; hold => none */
     unsigned event_frames;
@@ -62,6 +66,7 @@ typedef struct {
 int pp_ui_hit(PPUIRect rect, int x, int y);
 int pp_ui_rect_valid(PPUIRect rect);
 void pp_ui_init(PPUIState *state, unsigned enabled_pages, PPUIPage initial);
+int pp_ui_set_bindings(PPUIState *state, PPUIBindings bindings);
 PPUIResult pp_ui_step(PPUIState *state, const PPUIInput *input);
 void pp_ui_message(PPUIState *state, const char *message, unsigned frames);
 void pp_ui_tick(PPUIState *state);

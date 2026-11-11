@@ -59,9 +59,11 @@ Run:
 
 The native Makefile regenerates the C header from this JSON on changes.
 Starting page, enabled UI pages and touch enablement affect the native
-example. All listed bindings are used for planning; Star Catcher native
-controls currently remain B/X/Y/L/R in code. Other bindings require
-a tested adapter before claiming user-configurable native key mapping.
+example. The generated header now contains active bindings for the six UI actions:
+pause, help, back, next/previous page and confirm. The portable C state
+machine validates these bindings before gameplay starts. Star Catcher's
+analog movement and START exit are intentionally fixed; other source
+input mappings still require game-specific adapters.
 
 Unknown fields, wrong schema, duplicate pages, invalid controls, missing
 physical fallback, unsupported stereo in generated native code, guessed

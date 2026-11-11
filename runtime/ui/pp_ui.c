@@ -41,9 +41,27 @@ void pp_ui_init(PPUIState *s,unsigned enabled_pages,PPUIPage initial) {
     s->enabled_pages|=PP_UI_ALLOW_HUD | PP_UI_ALLOW_PAUSE | PP_UI_ALLOW_HELP;
     if(initial>PP_PAGE_INVENTORY ||
        !(s->enabled_pages&(1u<<initial))) initial=PP_PAGE_HUD;
+    s->bindings=(PPUIBindings){
+        PP_UI_KEY_X,PP_UI_KEY_Y,PP_UI_KEY_B,PP_UI_KEY_R,PP_UI_KEY_L,PP_UI_KEY_A
+    };
     s->page=initial;
     s->return_page=initial;
     s->help_return=initial;
+}
+int pp_ui_set_bindings(PPUIState *s,PPUIBindings b) {
+    uint32_t all=PP_UI_KEY_A|PP_UI_KEY_B|PP_UI_KEY_X|PP_UI_KEY_Y|
+                 PP_UI_KEY_LEFT|PP_UI_KEY_RIGHT|PP_UI_KEY_UP|PP_UI_KEY_DOWN|
+                 PP_UI_KEY_L|PP_UI_KEY_R;
+    uint32_t entries[6]={b.pause,b.help,b.back,b.next_page,b.previous_page,b.confirm};
+    unsigned n;
+    if(!s)return 0;
+    for(n=0;n<6;n++)if(!entries[n] || (entries[n]&~all))return 0;
+    for(n=0;n<6;n++) {
+        unsigned other;
+        for(other=n+1;other<6;other++)if(entries[n]&entries[other])return 0;
+    }
+    s->bindings=b;
+    return 1;
 }
 void pp_ui_message(PPUIState *s,const char *message,unsigned frames) {
     size_t i=0;
@@ -132,7 +150,7 @@ PPUIResult pp_ui_step(PPUIState *s,const PPUIInput *i) {
             }
         }
     } else if(!i->touch_active) {
-        if(i->pressed & PP_UI_KEY_X) {
+        if(i->pressed & s->bindings.pause) {
             if(s->page==PP_PAGE_PAUSE) {
                 s->page=s->return_page;
                 result.actions=PP_UI_ACTION_RESUME;
@@ -141,7 +159,7 @@ PPUIResult pp_ui_step(PPUIState *s,const PPUIInput *i) {
                 s->selected=0;
                 open_page(s,PP_PAGE_PAUSE);
             }
-        } else if(i->pressed & PP_UI_KEY_Y) {
+        } else if(i->pressed & s->bindings.help) {
             if(s->page==PP_PAGE_HELP) s->page=s->help_return;
             else {
                 s->help_return=s->page;
@@ -150,25 +168,26 @@ PPUIResult pp_ui_step(PPUIState *s,const PPUIInput *i) {
         } else if(s->page==PP_PAGE_PAUSE) {
             if(i->pressed & PP_UI_KEY_DOWN)s->selected=(s->selected+1)%3;
             if(i->pressed & PP_UI_KEY_UP)s->selected=(s->selected+2)%3;
-            if(i->pressed & PP_UI_KEY_A)result.actions=pause_selection(s,s->selected);
-            if(i->pressed & PP_UI_KEY_B) {
+            if(i->pressed & s->bindings.confirm)result.actions=pause_selection(s,s->selected);
+            if(i->pressed & s->bindings.back) {
                 s->page=s->return_page;
                 result.actions=PP_UI_ACTION_RESUME;
             }
         } else if(s->page==PP_PAGE_HELP || s->page==PP_PAGE_ERROR) {
-            if(i->pressed & (PP_UI_KEY_B|PP_UI_KEY_A))
+            if(i->pressed & (s->bindings.back|s->bindings.confirm))
                 s->page=s->page==PP_PAGE_HELP ? s->help_return : s->return_page;
-        } else if(i->pressed & (PP_UI_KEY_L|PP_UI_KEY_R)) {
-            s->page=next_visible(s,(i->pressed & PP_UI_KEY_R)?1:-1);
-        } else if(i->pressed & PP_UI_KEY_B) {
+        } else if(i->pressed & (s->bindings.previous_page|s->bindings.next_page)) {
+            s->page=next_visible(s,(i->pressed & s->bindings.next_page)?1:-1);
+        } else if(i->pressed & s->bindings.back) {
             if(s->page!=PP_PAGE_HUD)open_page(s,PP_PAGE_HUD);
             else result.actions=PP_UI_ACTION_RESTART;
         }
     }
     result.page_changed=s->page!=before;
     result.gameplay_allowed=s->page==PP_PAGE_HUD && !i->touch_active &&
-        !(i->pressed & (PP_UI_KEY_A|PP_UI_KEY_B|PP_UI_KEY_X|PP_UI_KEY_Y|
-                        PP_UI_KEY_L|PP_UI_KEY_R));
+        !(i->pressed & (s->bindings.confirm|s->bindings.back|
+                        s->bindings.pause|s->bindings.help|
+                        s->bindings.next_page|s->bindings.previous_page));
     pp_ui_tick(s);
     return result;
 }

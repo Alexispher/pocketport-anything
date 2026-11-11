@@ -36,3 +36,6 @@ the start page, page mask and touch enablement. Run:
 
 No active Azahar/console visual test is inferred from source or CI alone.
 See docs/DUAL_SCREEN.md.
+
+The JSON profile also compiles actual native UI bindings for pause, help, back,
+next/previous page and confirm; source movement controls remain game-specific.

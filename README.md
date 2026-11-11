@@ -695,5 +695,5 @@ NUP, PPIR, AAA research and conversion pipelines remain preserved.
 The dual-screen backend has native source and CI cross-compilation; emulator
 framebuffer, touchscreen and console hardware behavior require independent
 observation. Layout JSON is *not* proof of binary, engine or gameplay
-compatibility. Some bindings are assessment-only until native remapping is
-implemented.
+compatibility. Six UI bindings (pause/help/back/next/previous/confirm) now remap the
+native portable UI; game movement and START exit remain game-specific.

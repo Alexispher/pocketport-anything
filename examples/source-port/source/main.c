@@ -37,6 +37,13 @@ int main(int argc,char **argv) {
     }
     pp_game_init(&game,2026u);
     pp_ui_init(&ui,PP_PROFILE_ENABLED_PAGES,PP_PROFILE_INITIAL_PAGE);
+    if(!pp_ui_set_bindings(&ui,(PPUIBindings){
+        PP_PROFILE_BIND_PAUSE, PP_PROFILE_BIND_HELP, PP_PROFILE_BIND_BACK,
+        PP_PROFILE_BIND_NEXT_PAGE, PP_PROFILE_BIND_PREVIOUS_PAGE,
+        PP_PROFILE_BIND_CONFIRM})) {
+        pp_display_shutdown(&display);
+        return 2;
+    }
     pp_ui_message(&ui,"Collect falling stars",180);
     while(aptMainLoop()) {
         u32 down,held;

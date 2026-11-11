@@ -80,6 +80,25 @@ def validate_profile(data: object) -> dict:
             raise ScreenProfileError(f"Unsupported or repeated physical button in {name}")
     if "pause" not in bindings or "back" not in bindings:
         raise ScreenProfileError("pause and back require physical button bindings")
+
+    ui_keys = {
+        "a": "PP_UI_KEY_A", "b": "PP_UI_KEY_B", "x": "PP_UI_KEY_X",
+        "y": "PP_UI_KEY_Y", "dpad_left": "PP_UI_KEY_LEFT",
+        "dpad_right": "PP_UI_KEY_RIGHT", "dpad_up": "PP_UI_KEY_UP",
+        "dpad_down": "PP_UI_KEY_DOWN", "l": "PP_UI_KEY_L",
+        "r": "PP_UI_KEY_R"
+    }
+    for action in ("pause", "back", "help", "next_page", "previous_page", "confirm"):
+        if action not in bindings:
+            raise ScreenProfileError(f"Native UI action {action} needs a binding")
+        if any(k not in ui_keys for k in bindings[action]):
+            raise ScreenProfileError(f"Native UI action {action} has an unsupported key")
+    actions = ("pause", "help", "back", "next_page", "previous_page", "confirm")
+    for index, action in enumerate(actions):
+        for other in actions[index + 1:]:
+            if set(bindings[action]) & set(bindings[other]):
+                raise ScreenProfileError(f"Native actions {action} and {other} overlap")
+
     pages = p["pages"]
     if not isinstance(pages, list) or len(pages) > 5 or len(pages) < 3:
         raise ScreenProfileError("pages must be an explicit array of 3..5 entries")
@@ -192,6 +211,18 @@ def make_header(profile: dict) -> str:
         raise ScreenProfileError("Native Star Catcher frontend only implements top-screen gameplay")
     pages = p["pages"]
     pp_pages = [k.upper() for k in pages]
+    bindings = p["controls"]["bindings"]
+    ui_keys = {
+        "a": "PP_UI_KEY_A", "b": "PP_UI_KEY_B", "x": "PP_UI_KEY_X",
+        "y": "PP_UI_KEY_Y", "dpad_left": "PP_UI_KEY_LEFT",
+        "dpad_right": "PP_UI_KEY_RIGHT", "dpad_up": "PP_UI_KEY_UP",
+        "dpad_down": "PP_UI_KEY_DOWN", "l": "PP_UI_KEY_L",
+        "r": "PP_UI_KEY_R"
+    }
+    native_keys = {
+        name: "(" + " | ".join(ui_keys[k] for k in bindings[name]) + ")"
+        for name in ("pause", "help", "back", "next_page", "previous_page", "confirm")
+    }
     roles = {"hud": "PP_PAGE_HUD", "map": "PP_PAGE_MAP", "inventory": "PP_PAGE_INVENTORY"}
     initial = roles.get(p["displays"]["bottom"], "PP_PAGE_HUD")
     return (
@@ -201,7 +232,9 @@ def make_header(profile: dict) -> str:
         f"#define PP_PROFILE_NEW3DS {1 if p['target'] == 'new3ds' else 0}\n"
         f"#define PP_PROFILE_TOUCH_ENABLED {1 if p['touch']['mode']!='disabled' else 0}\n"
         f"#define PP_PROFILE_INITIAL_PAGE {initial}\n"
-        "#define PP_PROFILE_ENABLED_PAGES ("
+        + "".join(f"#define PP_PROFILE_BIND_{name.upper()} {bits}\n"
+                  for name, bits in native_keys.items())
+        + "#define PP_PROFILE_ENABLED_PAGES ("
         + " | ".join(f"PP_UI_ALLOW_{role}" for role in pp_pages) + ")\n"
         "#endif\n"
     )

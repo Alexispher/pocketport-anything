@@ -107,6 +107,18 @@ class ScreenProfileTests(unittest.TestCase):
             with self.assertRaises(ScreenProfileError):
                 load_profile(source)
 
+    def test_native_key_bindings_are_generated(self):
+        self.data["controls"]["bindings"]["pause"]=["a"]
+        self.data["controls"]["bindings"]["confirm"]=["x"]
+        code=make_header(self.data)
+        self.assertIn("#define PP_PROFILE_BIND_PAUSE (PP_UI_KEY_A)",code)
+        self.assertIn("#define PP_PROFILE_BIND_CONFIRM (PP_UI_KEY_X)",code)
+
+    def test_unmapped_native_control_is_rejected(self):
+        self.data["controls"]["bindings"]["pause"]=["circle_left"]
+        with self.assertRaises(ScreenProfileError):
+            validate_profile(self.data)
+
     def test_explicit_evidence_only(self):
         with self.assertRaises(ScreenProfileError):
             assess_profile(self.data,{"emulator_tested":"yes"})
