@@ -118,7 +118,7 @@ static unsigned pause_selection(PPUIState *s,unsigned choice) {
     return PP_UI_ACTION_NONE;
 }
 PPUIResult pp_ui_step(PPUIState *s,const PPUIInput *i) {
-    PPUIResult result={0,0,0};
+    PPUIResult result={0};
     PPUIPage before;
     int new_touch,hit=-1;
     unsigned j;
