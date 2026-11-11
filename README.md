@@ -45,6 +45,7 @@ The focus is ambitious: **large, complex 3D games and their engines**. Small ori
 |---|---|---|
 | Python CLI | **Implemented** | Inspection, planning, initialization, translation, asset optimization, builds, tests, reports |
 | File inventory | **Implemented** | SHA-256, file signatures and read-only inventory |
+| C/C++ source-port audit | **Implemented (static inspection)** | Bounded platform API, build, entrypoint and game-loop evidence; no automatic source adaptation |
 | NUP v1 metadata inspection | **Implemented** | Header and authenticated index inspection; no extraction or game execution |
 | PocketPort IR → C99 | **Implemented, limited** | Defined uint32 IR subset; **not** arbitrary machine code |
 | IR interpreter and equivalence checks | **Implemented** | Host-side comparison against compiled generated C |
@@ -84,6 +85,18 @@ Run the environment diagnostics:
 ```bash
 python -m pocketport doctor
 ```
+
+Audit a legally available game source tree for concrete adaptation points:
+
+```bash
+python -m pocketport source-audit /path/to/authorized/game-source --target old3ds
+```
+
+This read-only command reports candidate C/C++ engine entry points, build files,
+platform API call sites and follow-up engineering tasks with file/line evidence.
+It does not rewrite or execute the game and does not establish native playability.
+See [Source project audit](docs/SOURCE_PROJECT_AUDIT.md).
+
 
 Inspect a directory **without modifying its files**:
 

@@ -46,6 +46,25 @@ HOST_TESTED is not CROSS_COMPILED; CROSS_COMPILED is not INTERACTIVE.
 Native Star Catcher requires real libctru, Citro3D and Citro2D. The Skyrim viewer
 is separate and must remain working. Keep GPU resource ownership and cleanup bounded.
 
+## Actual source-engine inspection (new reusable workflow)
+
+When provided a C/C++ game source tree, use the supported source audit before
+guessing which platform adapters are needed:
+
+    python -m pocketport source-audit /path/to/authorized/game-source --target old3ds
+
+Or call the read-only MCP `source_audit` tool with workspace-relative
+`path` and explicit `target`. Study the resulting `findings`, which include
+exact file/line evidence for potential renderer, audio, input, threading,
+filesystem and architecture boundaries. See docs/SOURCE_PROJECT_AUDIT.md.
+
+Do NOT treat pattern matches as proven incompatibilities. Trace the actual
+interfaces and preserve existing gameplay before writing replacement code.
+Implement necessary missing adapters instead of declaring them categorically
+impossible, then verify on host, devkitARM and a runtime in that order.
+Source inspection alone cannot establish playability. Add each verified
+reusable adapter and its tests to the framework.
+
 This root skill is the SINGLE authoritative instruction body; other Agent Skills
 discovery entries only point here. Read the focused documentation as necessary,
 not all internals at once.

@@ -25,6 +25,7 @@ from .skyrim.fixture import generate as generate_fixture
 from .skyrim.texture_gpu import convert_t3x, DDSError as GPUDDSError
 from .planning import choose
 from .screens import load_profile, assess_profile, write_header
+from .source_audit import inspect_source_project
 from .translation import parse, verify_host, write_c
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -49,6 +50,9 @@ def run(args: argparse.Namespace) -> dict:
         return assess_profile(profile, evidence)
     if args.cmd == "screen-header":
         return write_header(Path(args.out), load_profile(Path(args.profile)))
+    if args.cmd == "source-audit":
+        return inspect_source_project(Path(args.directory), target=args.target,
+                                      max_files=args.max_files)
     if args.cmd == "detect-engine":
         return detect_engine(Path(args.directory), max_files=args.max_files)
     if args.cmd == "inspect-executable":
@@ -185,6 +189,10 @@ def parser() -> argparse.ArgumentParser:
     header = commands.add_parser("screen-header", help="Generate compile-time 3DS UI layout config")
     header.add_argument("profile")
     header.add_argument("--out", required=True)
+    audit = commands.add_parser("source-audit", help="Inspect C/C++ code for actionable native porting boundaries")
+    audit.add_argument("directory")
+    audit.add_argument("--target", choices=("old3ds", "new3ds"), default="old3ds")
+    audit.add_argument("--max-files", type=int, default=2500)
     engine = commands.add_parser("detect-engine", help="Detect read-only engine-family candidates")
     engine.add_argument("directory")
     engine.add_argument("--max-files", type=int, default=5000)

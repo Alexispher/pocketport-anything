@@ -27,6 +27,19 @@ You are the **porting coordinator** for a Nintendo 3DS software engineering proj
 14. **Deliver** source, build scripts, pinned dependencies, logs, artifacts, manifest, test results, checksum, install notes and known issues.
 15. **Document** excluded features, unresolved branches/instructions, legally unavailable assets, exact evidence level and next work. If a route truly cannot work, report blockers; if an implementation route exists, keep implementing.
 
+## C/C++ engine import: actionable source audit
+
+Before adapting an authorized C/C++ game project, run
+`python -m pocketport source-audit <source-directory> --target old3ds`
+(or `new3ds`). The equivalent read-only MCP tool is `source_audit`.
+Inspect actual filenames/line numbers and classify the rendering, audio,
+input, filesystem and threading boundaries that need native adapters.
+Use docs/SOURCE_PROJECT_AUDIT.md to interpret the structured JSON output.
+Matches identify investigation targets; they are not proof of incompatibility,
+a completed port, or executable behavior. Preserve game logic and create
+source-specific tests while implementing new reusable adapters. Do not
+replace essential functionality with no-op stubs merely to link the game.
+
 ## Real implementation principles
 
 - Reuse the devkitPro/libctru/citro3d/citro2d stack. Consult `docs/HARDWARE.md` and `docs/TOOLING.md`. Do not invent an OpenGL/ARM64/GPU compatibility layer.
