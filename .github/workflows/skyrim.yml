@@ -239,7 +239,7 @@ jobs:
           set -euxo pipefail
           export PATH="$DEVKITARM/bin:$DEVKITPRO/tools/bin:$PATH"
           python3 -m pocketport inspect-source external/abbaye --out /tmp/abbaye-original-report.json
-          python3 -m pocketport port external/abbaye --out /tmp/pocketport-abbaye --target new3ds --copy-assets
+          python3 -m pocketport port external/abbaye --out /tmp/pocketport-abbaye --target new3ds --adapter abbaye-native-3ds --copy-assets
           python3 -m pocketport verify-port /tmp/pocketport-abbaye
           python3 - <<'PY'
           from pathlib import Path
@@ -255,7 +255,11 @@ jobs:
           assert (a/"source/romfs/data/map.txt").is_file()
           assert (a/"source/romfs/sounds/AreaIChurchN.wav").is_file()
           assert (a/"source/COPYING").is_file()
-          assert m["adapter"]=="none"
+          assert m["adapter"]=="abbaye-native-3ds"
+          assert len(m["patches"])==1
+          assert m["patches"][0]["path"]=="src/history.c"
+          assert "aud_StopMusic();" in (a/"source/src/history.c").read_text()
+          assert (a/"source/src/history.c").read_bytes() != (Path("external/abbaye")/"src/history.c").read_bytes()
           print("ACTUAL_GPL_GAME_SOURCE_PRESERVED",len(m["files"]))
           PY
       - name: Compile the game's REAL C gameplay code with devkitARM

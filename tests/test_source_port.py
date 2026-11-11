@@ -113,6 +113,26 @@ class ImportedSourceTests(unittest.TestCase):
             self.assertIn("+\t\trendererFlags = SDL_RENDERER_SOFTWARE;",diff)
             self.assertTrue(verify_port(root/"edgar")["sha256_verified"])
 
+    def test_historic_native_abbaye_audio_adapter(self):
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d)
+            source=fixture(root)
+            (source/"src/3ds").mkdir()
+            (source/"src/3ds/audio.h").write_text(
+                "void aud_StopMusic();\n",encoding="utf-8")
+            (source/"src/main.c").write_text(
+                "/* GPL v3 */\nvoid main_game(void){gfx_Init();}\n",encoding="utf-8")
+            original="void history(void){ aud_StopMusic(music); keep_game_progression(); }\n"
+            (source/"src/history.c").write_text(original,encoding="utf-8")
+            adapted=root/"native"
+            result=port_project(source,adapted,adapter="abbaye-native-3ds")
+            self.assertEqual(result["patches"],1)
+            changed=(adapted/"source/src/history.c").read_text()
+            self.assertIn("aud_StopMusic();",changed)
+            self.assertIn("keep_game_progression();",changed)
+            self.assertEqual((source/"src/history.c").read_text(),original)
+            self.assertTrue(verify_port(adapted)["sha256_verified"])
+
     def test_adapter_rejects_nonmatching_edgar(self):
         with tempfile.TemporaryDirectory() as d:
             root=Path(d)

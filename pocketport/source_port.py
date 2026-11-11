@@ -226,11 +226,25 @@ def _edgar_patch(file: str, before: str) -> tuple[str, list[str]]:
     return after, ["src/init.c: SDL renderer selection guarded by __3DS__"]
 
 
+def _abbaye_patch(file: str, before: str) -> tuple[str, list[str]]:
+    """Repair an actual historic 3DS call against its own zero-arg audio API."""
+    if file != "src/history.c":
+        return before, []
+    if "aud_StopMusic(music);" not in before or "history(" not in before:
+        raise PortError("Abbaye history source changed; manual audio adapter review required")
+    if before.count("aud_StopMusic(music);") != 1:
+        raise PortError("Ambiguous Abbaye music-stop call; refusing mass replacement")
+    # aud_StopMusic() is declared in src/3ds/audio.h and acts on channel 0,
+    # not on a Music pointer. Dropping the extra argument preserves intent.
+    return (before.replace("aud_StopMusic(music);", "aud_StopMusic();", 1),
+            ["src/history.c: correct music stop to native aud_StopMusic() signature"])
+
+
 def port_project(root: str | Path, output: str | Path, *, target: str = "new3ds",
                  adapter: str = "none", copy_assets: bool = False) -> dict:
     if target not in ("old3ds", "new3ds"):
         raise PortError("Target must be old3ds or new3ds")
-    if adapter not in ("none", "edgar-sdl2"):
+    if adapter not in ("none", "edgar-sdl2", "abbaye-native-3ds"):
         raise PortError("Unknown adapter; game-specific adapters must be explicitly selected")
     source = Path(root).resolve(strict=True)
     output = Path(output).absolute()
@@ -242,11 +256,24 @@ def port_project(root: str | Path, output: str | Path, *, target: str = "new3ds"
     if output == source or output in source.parents:
         raise PortError("Destination must be separate from imported source")
     report = inspect_source(source)
-    if adapter == "edgar-sdl2":
-        marker = source / "src" / "init.c"
+    adapter_targets = {
+        "edgar-sdl2": ("src/init.c", _edgar_patch),
+        "abbaye-native-3ds": ("src/history.c", _abbaye_patch)
+    }
+    if adapter in adapter_targets:
+        relative, function = adapter_targets[adapter]
+        marker = source / relative
         if not marker.is_file():
-            raise PortError("Edgar adapter needs src/init.c")
-        _edgar_patch("src/init.c", marker.read_text(encoding="utf-8"))
+            raise PortError(f"{adapter} requires {relative}")
+        if adapter == "abbaye-native-3ds":
+            header = source / "src/3ds/audio.h"
+            main = source / "src/main.c"
+            if (not header.is_file() or not main.is_file() or
+                    "void aud_StopMusic();" not in header.read_text(encoding="utf-8") or
+                    "gfx_Init();" not in main.read_text(encoding="utf-8") or
+                    "GPL v3" not in main.read_text(encoding="utf-8")):
+                raise PortError("Abbaye native adapter provenance/API guard failed")
+        function(relative, marker.read_text(encoding="utf-8"))
     files = _bounded_tree(source, include_assets=copy_assets)
     changes, checksum = [], []
     with tempfile.TemporaryDirectory(prefix=".pp-port-", dir=parent) as temporary:
@@ -256,9 +283,9 @@ def port_project(root: str | Path, output: str | Path, *, target: str = "new3ds"
         for rel, original, _ in files:
             destination = copied / rel
             destination.parent.mkdir(parents=True, exist_ok=True)
-            if adapter == "edgar-sdl2" and rel == "src/init.c":
+            if adapter in adapter_targets and rel == adapter_targets[adapter][0]:
                 previous = original.read_text(encoding="utf-8")
-                revised, actions = _edgar_patch(rel, previous)
+                revised, actions = adapter_targets[adapter][1](rel, previous)
                 destination.write_text(revised, encoding="utf-8")
                 patch = "".join(difflib.unified_diff(
                     previous.splitlines(True), revised.splitlines(True),

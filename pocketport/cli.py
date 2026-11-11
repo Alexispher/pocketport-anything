@@ -210,7 +210,7 @@ def parser() -> argparse.ArgumentParser:
     port.add_argument("source")
     port.add_argument("--out", required=True)
     port.add_argument("--target", choices=("old3ds","new3ds"), default="new3ds")
-    port.add_argument("--adapter", choices=("none","edgar-sdl2"), default="none",
+    port.add_argument("--adapter", choices=("none","edgar-sdl2","abbaye-native-3ds"), default="none",
                       help="Apply only a named, reviewed source change")
     port.add_argument("--copy-assets", action="store_true",
                       help="Copy locally licensed game assets under bounded input limits")
