@@ -136,5 +136,33 @@ class FieldLabTests(unittest.TestCase):
                     audit_field_manifest(q)
 
 
+    def test_rejects_invalid_json_types(self):
+        with tempfile.TemporaryDirectory() as d:
+            p, manifest, _ = self._make_project(Path(d))
+            manifest["target"] = []
+            p.write_text(json.dumps(manifest), encoding="utf-8")
+            with self.assertRaises(FieldLabError):
+                audit_field_manifest(p)
+            manifest["target"] = "new3ds"
+            manifest["scenarios"][0]["result"] = {}
+            p.write_text(json.dumps(manifest), encoding="utf-8")
+            with self.assertRaises(FieldLabError):
+                audit_field_manifest(p)
+
+    def test_rejects_symlinked_evidence_even_inside_workspace(self):
+        with tempfile.TemporaryDirectory() as d:
+            folder = Path(d)
+            p, manifest, _ = self._make_project(folder)
+            link = folder / "boot-link.txt"
+            try:
+                link.symlink_to(folder / "boot.log")
+            except (NotImplementedError, OSError):
+                self.skipTest("Symlink support unavailable")
+            manifest["scenarios"][0]["evidence"] = "boot-link.txt"
+            p.write_text(json.dumps(manifest), encoding="utf-8")
+            with self.assertRaises(FieldLabError):
+                audit_field_manifest(p)
+
+
 if __name__ == "__main__":
     unittest.main()
