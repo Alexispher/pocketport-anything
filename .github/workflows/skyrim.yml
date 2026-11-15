@@ -2,6 +2,7 @@ name: Skyrim host parsing and native C scene tests
 on:
   push:
     branches:
+      - main
       - feature/skyrim-native-runtime
       - feature/antigravity-skyrim-rendering
       - feature/universal-3ds-dual-screen-skill
