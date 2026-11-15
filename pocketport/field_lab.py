@@ -155,6 +155,11 @@ def _relative_file(root: Path, relative: str, limit: int | None = None) -> Path:
     resolved = (canonical_root / raw).resolve()
     if not resolved.is_relative_to(canonical_root):
         raise FieldLabError("Path escapes the evidence folder")
+    cursor = canonical_root
+    for part in raw.parts:
+        cursor = cursor / part
+        if cursor.is_symlink():
+            raise FieldLabError("Symlinked evidence path is not accepted")
     if limit is not None:
         _regular_file(resolved, limit)
     elif not resolved.is_file():
@@ -184,7 +189,7 @@ def audit_field_manifest(path: Path) -> dict:
         raise FieldLabError("Malformed UTF-8 field manifest JSON") from exc
     if not isinstance(data, dict) or type(data.get("schema_version")) is not int or data["schema_version"] != 1:
         raise FieldLabError("Expected schema_version 1 manifest object")
-    if data.get("target") not in TARGETS:
+    if not isinstance(data.get("target"), str) or data["target"] not in TARGETS:
         raise FieldLabError("target must be old3ds or new3ds")
     base = p.parent
     artifact = data.get("artifact")
@@ -225,7 +230,8 @@ def audit_field_manifest(path: Path) -> dict:
         ids.add(sid)
         result = item["result"]
         env = item["environment"]
-        if result not in RESULTS or env not in ENVIRONMENTS:
+        if (not isinstance(result, str) or result not in RESULTS or
+                not isinstance(env, str) or env not in ENVIRONMENTS):
             raise FieldLabError("Unknown scenario result/environment")
         evidence_file = item.get("evidence")
         evidence_available = False
