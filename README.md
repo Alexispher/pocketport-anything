@@ -21,6 +21,24 @@
 > [!IMPORTANT]
 > **“Anything” describes the scope of investigation, not a promise of universal compatibility.** PocketPort Anything is **not** a Switch/Switch 2 emulator, a one-click commercial-game converter, or a complete ARM64/x86/MIPS-to-ARM11 recompiler. Its current working components are real but deliberately limited. This README distinguishes **implemented features**, **validated host behavior**, and **future engineering goals**.
 
+## 🚀 Autonomous Porting Field Lab
+
+The root [SKILL.md](SKILL.md) now directs coding agents to **implement, adapt, profile and verify genuine 3DS gameplay**, not stop at unsupported "impossible" verdicts. This is an aggressive engineering workflow, **not** an assertion that any arbitrary retail game already runs.
+
+- **[Autonomous Porting Playbook](docs/AUTONOMOUS_PORTING_PLAYBOOK.md)** — end-to-end route choices, native runtime, PC conversion, gameplay progression and experimental debugging.
+- **[Engineering Patterns](docs/PORT_ENGINEERING_PATTERNS.md)** — implementable contracts for indexed asset packs, visibility culling, streaming, collision, multi-layer controls, audio and online state.
+- **[Field Test Protocol](docs/FIELD_TEST_PROTOCOL.md)** — independent frame telemetry, percentile analysis, same-build 3DSX evidence and real-device acceptance.
+
+Once a game runtime has instrumented and recorded real frames, analyze them with:
+
+    python -m pocketport profile-frames /path/to/frames.csv --target-fps 30
+
+For a private artifact/evidence manifest from an actual test run, use:
+
+    python -m pocketport field-audit /path/to/field-manifest.json
+
+These commands are **read-only analyzers**; they neither record a console nor certify gameplay from a filename or a reported pass. The native gameplay systems described in the playbook are implementation goals unless specifically backed by code and tests.
+
 ## 🌌 The vision
 
 **What if an AI coding agent could investigate *any* game, understand what makes it run, locate reusable implementations, plan a Nintendo 3DS adaptation, build the necessary components, and prove what actually works?**
