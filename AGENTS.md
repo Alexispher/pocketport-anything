@@ -129,3 +129,18 @@ compiler logs, structured diagnostics, new 3DSX hashes and blockers.
 Use diagnose-build to investigate each failure, change one verified cause
 and repeat CI. Preserve original game behavior and licensing. Progression
 and audio controls require actual emulator/hardware evidence.
+
+
+## Autonomous port-construction priority (mandatory for all coding agents)
+
+This repository is an **execution framework**. Once the operator authorizes a game port, investigate, implement, build and test rather than terminating at feasibility speculation. Read the root SKILL.md mission directive plus docs/AUTONOMOUS_PORTING_PLAYBOOK.md, docs/PORT_ENGINEERING_PATTERNS.md and docs/FIELD_TEST_PROTOCOL.md before designing major new adapters.
+
+Never reject a target merely because of its desktop engine, release date, original PC specifications, model count or lack of a previous port. Instead formulate testable alternatives: native core adaptation; a replaced platform backend; a host-side converter and compact resource packs; an independent compatible runtime; or a clearly labeled demake. Measure actual CPU/GPU/memory/I/O constraints, choose the next experiment, preserve gameplay semantics and record unsuccessful results. Bold engineering does not mean unverified claims.
+
+**Prefer real gameplay over visually impressive placeholder prototypes.** Work toward collision-correct movement, interactions, quest/combat systems, map transition, controls on both Old and New models, audio, checkpoint/save/load, failure recovery and game progression. Keep host converter and native runtime independent, separate world/asset/collision packs, account for streaming generations and stale resources, prioritize near collision and fail gracefully on optional visuals.
+
+Instrument the exact same native build. The Field Lab commands are \`python -m pocketport profile-frames frames.csv --target-fps 30\` and \`python -m pocketport field-audit field-manifest.json\`. These analyze external data and check artifact references; they do not collect, execute, observe or certify the game. A recorded "pass" remains a claim until a tester actually reviews hardware/emulator evidence.
+
+For online games, support legal protocols against authorized servers; never evade authentication, anti-cheat or server access controls. Keep original licensed game assets private and do not transplant unlicensed third-party source or falsely claim provenance.
+
+**Output for every substantial iteration:** changed source, regression tests, actual compile/test commands, artifact hashes when generated, source/game revision, measured frame distribution when available, unresolved blockers, and the next executable task. Preserve existing work and don't merge speculative changes into main without review.
