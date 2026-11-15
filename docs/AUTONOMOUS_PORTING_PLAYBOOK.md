@@ -6,7 +6,7 @@ This is a design and agent-execution protocol. Only the code already shipped in 
 
 ## 1. Agent autonomy and escalation
 
-- Begin with \`git status\`, exact revision, existing tests and all active work; use an independent branch and an isolated private game workspace. Never overwrite the operator's source installation, saves or uncommitted changes.
+- Begin with `git status`, exact revision, existing tests and all active work; use an independent branch and an isolated private game workspace. Never overwrite the operator's source installation, saves or uncommitted changes.
 - If the user authorized porting, run the existing read-only inspection tools immediately. Do not stop at a report when code changes are possible.
 - Maintain a *live engineering ledger*: hypothesis, evidence, failing input hash, command, trace/log reference, implementation diff, observed outcome, next experiment, and status.
 - Parallelize independent jobs only: file formats, renderer, control semantics, audio, streaming, test harness and game logic; specify interfaces and acceptance tests first. The coordinator merges, compiles and resolves conflicts.
@@ -30,12 +30,12 @@ Do **not** assert that every engine has an open-source equivalent or that a reta
 ## 3. First 90 minutes of engineering (sequence, not a completion estimate)
 
 1. Identify target game, edition, architecture, file signatures, verified inputs and asset/source rights. Compute SHA-256, record build IDs and language/region.
-2. Inspect current PocketPort branch and exact CLI flags; run \`python -m pocketport doctor\`, \`inspect-source\`, \`source-audit\`, \`port-assess\`. For binary assets use bounded inspect/format-specific readers and reject unsupported data honestly.
+2. Inspect current PocketPort branch and exact CLI flags; run `python -m pocketport doctor`, `inspect-source`, `source-audit`, `port-assess`. For binary assets use bounded inspect/format-specific readers and reject unsupported data honestly.
 3. Compile and run the **smallest genuine native** 3DS baseline, not a fake binary. Keep log, ELF/3DSX hash, dependencies and toolchain version.
 4. Choose one representative original game scene that exercises geometry, textures, input, state and collision. State concrete pass/fail conditions and reference evidence.
 5. Make a reversible adapter or PC converter for that case, with tests for malformed data, indices, bounds, endian and version.
 6. Render/step it on the target. Record real runtime output and actual failure conditions.
-7. Instrument CPU frame phases and memory; run \`profile-frames\` on the resulting CSV. Tune one bottleneck at a time.
+7. Instrument CPU frame phases and memory; run `profile-frames` on the resulting CSV. Tune one bottleneck at a time.
 8. Add the next mechanic (interaction, enemy, transition, save) and keep earlier functionality working.
 9. Update the ledger and regression suite. Repeat until the original game's meaningful progression works.
 
@@ -63,7 +63,7 @@ A PC can spend minutes processing resources that the handheld should load in mil
 - Separate persistent world state, render state, asset registry, streaming queues and temporary frame allocations.
 - Preallocate/bound memory by **runtime-discovered available grant**. Monitor linear heap, conventional heap and VRAM independently. A device's physical RAM is not a process heap budget.
 - Stream visible cells with prioritized queues: collision and player-adjacent geometry first, nearby interactive entities second, distant decorative resources last. Prefetch directionally, and apply backpressure before memory exhaustion.
-- Use explicit resource state \`UNLOADED -> QUEUED -> LOADING -> READY -> EVICT_PENDING\`; prevent rendering freed data or mixing map generations during fast travel/death/reload.
+- Use explicit resource state `UNLOADED -> QUEUED -> LOADING -> READY -> EVICT_PENDING`; prevent rendering freed data or mixing map generations during fast travel/death/reload.
 - Keep SD/card I/O and expensive decompression out of the render-critical path where possible. GPU uploads and Citro3D resource ownership must be serialized correctly. Thread availability, service access and scheduling are model/configuration-specific.
 - Support graceful visual fallback when distant resources are missing; never allow the character to fall through missing collision or skip mandatory scripted triggers.
 - Make shutdown and partial initialization recoverable; release audio, GPU and SD resources without stale pointers.
@@ -98,7 +98,7 @@ Optional 800x240 wide/stereo mode is an **experiment**, not a default feature pr
 
 ## 7. Controls as a state machine
 
-For every gameplay/menu/cinematic/network context maintain an authoritative required-action list. Use \`control-coverage\` on a validated JSON inventory, then verify context transitions at runtime.
+For every gameplay/menu/cinematic/network context maintain an authoritative required-action list. Use `control-coverage` on a validated JSON inventory, then verify context transitions at runtime.
 
 - Normalize buttons, touch, Circle Pad, C-Stick and optional ZL/ZR to actions, not hardwired scenes.
 - Use modifier layers / sets for numerous abilities, with visual feedback so players know which action each button invokes.
@@ -132,6 +132,6 @@ Each attempt delivers a code diff and a short machine-readable/Markdown report w
 - tests run, failing/untested systems and regressions;
 - next executable experiment and what would falsify its hypothesis.
 
-\`docs/FIELD_TEST_PROTOCOL.md\` defines a minimal manifest and the \`field-audit\` command to validate evidence bookkeeping without pretending to observe the console itself.
+`docs/FIELD_TEST_PROTOCOL.md` defines a minimal manifest and the `field-audit` command to validate evidence bookkeeping without pretending to observe the console itself.
 
 **Success criteria:** another developer, starting from authorized inputs and a clean checkout, can reproduce the build, install it, play an authentic interaction, progress through a game milestone and inspect evidence of the same build. Expand until the full original gameplay loop is demonstrated.
