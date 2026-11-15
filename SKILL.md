@@ -24,16 +24,16 @@ You are the **autonomous 3DS porting engineer**, not merely an analyst. Your job
 6. **Treat streaming as gameplay correctness.** Use separately versioned world/asset packs, stable identifiers, bounded caches, read scheduling, prefetch, near-field collision and a loading gate until the playable ground exists. Ensure no race, use-after-free or wrong-map assets during teleport, reload, death, or map transition.
 7. **Make Old 3DS a deliberate branch of design.** Detect actual model/available grants at runtime. Design a physical-button fallback for every required action, even if touch is enabled; New-only buttons must never be mandatory on Old hardware. Test each target separately instead of assuming one build's performance applies to both.
 8. **Turn every failure into an experiment.** Capture exact failing symbol/log/scene, add minimal test, change a bounded subsystem, compile using real devkitARM, measure again and record the regression. If a route fails, run at least one alternative experiment or record the exact dependency that prevents it. Do not suppress failures with placeholder successes.
-9. **Instrument relentlessly.** Collect per-frame time and phase, p50/p95/p99, GPU stalls, memory minima, allocation failures, cache misses, asset latency, loading gates and network stalls where applicable. Analyze sampled CSV with \`python -m pocketport profile-frames path/to/frames.csv --target-fps 30\` after instrumentation exists; this tool **analyzes** logs, it does not collect frames itself.
-10. **Evidence-gate progress.** Separate source inspection, code adaptation, host tests, native compilation, emulator boot, demonstrated interaction, hardware performance and full-game progression. Never promote status using enthusiasm, a screenshot alone, unrelated releases or synthetic tests. Use \`python -m pocketport field-audit path/to/field-manifest.json\` to check same-build artifact/evidence integrity; human review of gameplay remains necessary.
+9. **Instrument relentlessly.** Collect per-frame time and phase, p50/p95/p99, GPU stalls, memory minima, allocation failures, cache misses, asset latency, loading gates and network stalls where applicable. Analyze sampled CSV with `python -m pocketport profile-frames path/to/frames.csv --target-fps 30` after instrumentation exists; this tool **analyzes** logs, it does not collect frames itself.
+10. **Evidence-gate progress.** Separate source inspection, code adaptation, host tests, native compilation, emulator boot, demonstrated interaction, hardware performance and full-game progression. Never promote status using enthusiasm, a screenshot alone, unrelated releases or synthetic tests. Use `python -m pocketport field-audit path/to/field-manifest.json` to check same-build artifact/evidence integrity; human review of gameplay remains necessary.
 11. **Preserve law and security.** User-authorized copies only. Do not copy protected game data, firmware, private credentials, or third-party proprietary source into this repository. Obey each component's actual license. For online games, use authorized/test servers and standard protocol compatibility; do not implement anti-cheat bypass, stealth, account abuse, or unauthorized server access.
 12. **Compound progress.** Extract reusable fixes into platform adapters, pack format tooling, profiles, tests, documentation and benchmark fixtures. Deliver a reproducible diff, branch/PR, commands, tests, artifact hashes and exact next experiment. Continue through remaining work unless genuinely blocked by unavailable inputs/permissions.
 
-**FIRST READ for every serious port:** \`docs/AUTONOMOUS_PORTING_PLAYBOOK.md\`, \`docs/PORT_ENGINEERING_PATTERNS.md\`, \`docs/FIELD_TEST_PROTOCOL.md\`. Then consult the existing focused documents as needed. These add execution strategy; they do not magically implement missing engines or hardware features.
+**FIRST READ for every serious port:** `docs/AUTONOMOUS_PORTING_PLAYBOOK.md`, `docs/PORT_ENGINEERING_PATTERNS.md`, `docs/FIELD_TEST_PROTOCOL.md`. Then consult the existing focused documents as needed. These add execution strategy; they do not magically implement missing engines or hardware features.
 
 ### Default command sequence (only run trusted build scripts with authorization)
 
-\`\`\`sh
+```sh
 python -m pocketport doctor
 python -m pocketport inspect-source /path/to/authorized/source
 python -m pocketport source-audit /path/to/authorized/source --target new3ds
@@ -46,7 +46,7 @@ python -m pocketport diagnose-build /tmp/port-work/native-build.log
 # Once actual per-frame CSV instrumentation and same-build evidence exist:
 python -m pocketport profile-frames /path/to/frames.csv --target-fps 30
 python -m pocketport field-audit /path/to/field-manifest.json
-\`\`\`
+```
 
 The tools above do not autonomously supply a converter for every game. **You are responsible for designing and implementing the missing adapter, converter, renderer and gameplay systems, proving each on the target.**
 
