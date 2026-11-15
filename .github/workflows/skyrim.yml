@@ -24,6 +24,19 @@ jobs:
         run: python -m unittest discover -s tests -v
       - name: All Pytest regressions
         run: python -m pytest -q
+      - name: Field lab measured-log contract (synthetic test data only)
+        run: |
+          python -m pocketport profile-frames examples/field-lab/synthetic-frames.csv --target-fps 30 > /tmp/pocketport-field-frames.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          data=json.loads(Path('/tmp/pocketport-field-frames.json').read_text())
+          assert data['source_rows'] == 5
+          assert data['frame_time']['over_frame_budget'] == 2
+          assert data['frame_time']['stalls_over_50ms'] == 1
+          assert data['frame_time']['worst_ms'] == 82
+          assert data['minimum_available_kb']['linear_free_kb'] == 14000
+          PY
       - name: Original dual-screen profile CLI checks
         run: |
           python -m pocketport screen-assess examples/source-port/display-profile.json
