@@ -139,7 +139,7 @@ Never reject a target merely because of its desktop engine, release date, origin
 
 **Prefer real gameplay over visually impressive placeholder prototypes.** Work toward collision-correct movement, interactions, quest/combat systems, map transition, controls on both Old and New models, audio, checkpoint/save/load, failure recovery and game progression. Keep host converter and native runtime independent, separate world/asset/collision packs, account for streaming generations and stale resources, prioritize near collision and fail gracefully on optional visuals.
 
-Instrument the exact same native build. The Field Lab commands are \`python -m pocketport profile-frames frames.csv --target-fps 30\` and \`python -m pocketport field-audit field-manifest.json\`. These analyze external data and check artifact references; they do not collect, execute, observe or certify the game. A recorded "pass" remains a claim until a tester actually reviews hardware/emulator evidence.
+Instrument the exact same native build. The Field Lab commands are `python -m pocketport profile-frames frames.csv --target-fps 30` and `python -m pocketport field-audit field-manifest.json`. These analyze external data and check artifact references; they do not collect, execute, observe or certify the game. A recorded "pass" remains a claim until a tester actually reviews hardware/emulator evidence.
 
 For online games, support legal protocols against authorized servers; never evade authentication, anti-cheat or server access controls. Keep original licensed game assets private and do not transplant unlicensed third-party source or falsely claim provenance.
 
