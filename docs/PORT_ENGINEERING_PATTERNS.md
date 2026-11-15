@@ -30,9 +30,9 @@ Useful pack test cases: zero-cell map, maximum legal chunk, duplicate content ID
 
 Define phases explicitly, instrument them and keep the metrics portable:
 
-\`frame\` = \`input -> simulation -> visibility -> prepare -> streaming_apply -> render_submit -> gpu_wait -> audio_housekeeping\`.
+`frame` = `input -> simulation -> visibility -> prepare -> streaming_apply -> render_submit -> gpu_wait -> audio_housekeeping`.
 
-Log **per-frame** rows with \`frame_ms,phase,cpu_ms,gpu_ms,stream_ms,heap_free_kb,linear_free_kb,vram_free_kb,draw_calls\` where available. Missing fields may stay absent; never invent numbers. Timestamp and coarse map/camera location help correlate spikes. Use \`python -m pocketport profile-frames frames.csv --target-fps 30\` for a real captured log.
+Log **per-frame** rows with `frame_ms,phase,cpu_ms,gpu_ms,stream_ms,heap_free_kb,linear_free_kb,vram_free_kb,draw_calls` where available. Missing fields may stay absent; never invent numbers. Timestamp and coarse map/camera location help correlate spikes. Use `python -m pocketport profile-frames frames.csv --target-fps 30` for a real captured log.
 
 **Failure budgeting**: Measure p50, p95, p99, maximum, late-frame count, long stalls and free-memory minima. Compare a rural/empty area, dense geometry, a particle-heavy encounter, traversal, menu UI, save/load and map transition. A stable average FPS with violent loading hitches is a failed streaming test.
 
@@ -94,13 +94,13 @@ A client can be "online" yet fail progression, inventory, social UI, group conte
 A task must identify: code path, actual source/game input fixture, expected mechanic, measurable criterion, target model, regression test, evidence type and fallback experiment.
 
 Required states:
-- \`SOURCE_INSPECTED\`: source and dependencies mapped.
-- \`SOURCE_ADAPTED\`: reviewed real code diff with reference tests.
-- \`HOST_TESTED\`: host behavior exercised.
-- \`CROSS_COMPILED\`: actual devkitARM build output checked.
-- \`EMULATOR_BOOTED\`: same build started in a live emulator.
-- \`INTERACTIVE\`: authentic input changes authentic game state.
-- \`HARDWARE_VALIDATED\`: same build tested on a physical console with measured resources.
-- \`FULL_GAME_VALIDATED\`: comprehensive original gameplay, transitions, persistence and ending verified.
+- `SOURCE_INSPECTED`: source and dependencies mapped.
+- `SOURCE_ADAPTED`: reviewed real code diff with reference tests.
+- `HOST_TESTED`: host behavior exercised.
+- `CROSS_COMPILED`: actual devkitARM build output checked.
+- `EMULATOR_BOOTED`: same build started in a live emulator.
+- `INTERACTIVE`: authentic input changes authentic game state.
+- `HARDWARE_VALIDATED`: same build tested on a physical console with measured resources.
+- `FULL_GAME_VALIDATED`: comprehensive original gameplay, transitions, persistence and ending verified.
 
 Do not infer higher states from lower ones. Preserve negative and untested evidence. The Field Lab CLI checks the integrity of claims and measurements, not a human's observation of the scene.
